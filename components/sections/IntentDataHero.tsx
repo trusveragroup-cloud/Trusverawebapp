@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { C } from "@/lib/colors";
 import NetworkBG from "@/components/svgs/NetworkBG";
@@ -28,7 +30,10 @@ const pillItem = {
 };
 
 export default function IntentDataHero() {
+  const [videoOpen, setVideoOpen] = useState(false);
+
   return (
+    <>
     <section
       className="id-hero"
       style={{
@@ -41,6 +46,19 @@ export default function IntentDataHero() {
         padding: "140px 24px 100px",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: "url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          opacity: 0.15,
+          zIndex: 0,
+        }}
+      />
+
       <div style={{ position: "absolute", inset: 0, opacity: 0.15, pointerEvents: "none" }} aria-hidden="true">
         <NetworkBG />
       </div>
@@ -104,7 +122,8 @@ export default function IntentDataHero() {
           variants={headline}
           style={{ marginTop: 36, display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}
         >
-          <button
+          <Link
+            href="/contact"
             style={{
               background: C.gold500,
               color: C.forest900,
@@ -115,23 +134,45 @@ export default function IntentDataHero() {
               fontWeight: 600,
               fontSize: 15,
               cursor: "pointer",
+              textDecoration: "none",
+              display: "inline-block",
             }}
           >
             Book a Discovery Call
-          </button>
+          </Link>
           <button
+            onClick={() => setVideoOpen(true)}
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
               background: "transparent",
-              border: "1px solid rgba(255,255,255,0.2)",
-              color: C.cream50,
-              borderRadius: 8,
-              padding: "14px 32px",
+              border: "1px solid rgba(255,255,255,0.3)",
+              color: C.cream100,
               fontFamily: "var(--font-inter), sans-serif",
+              fontSize: 14,
               fontWeight: 500,
-              fontSize: 15,
+              padding: "12px 24px",
+              borderRadius: 6,
               cursor: "pointer",
             }}
           >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: C.gold500,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+                <path d="M0 0L10 6L0 12V0Z" fill="#0F3D25" />
+              </svg>
+            </div>
             See How It Works
           </button>
         </motion.div>
@@ -153,5 +194,65 @@ export default function IntentDataHero() {
         </motion.div>
       </div>
     </section>
+
+    {videoOpen && (
+      <div
+        onClick={() => setVideoOpen(false)}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.85)",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: 900,
+            borderRadius: 12,
+            overflow: "hidden",
+            background: "#000",
+          }}
+        >
+          <button
+            onClick={() => setVideoOpen(false)}
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 10,
+              background: "rgba(0,0,0,0.6)",
+              border: "none",
+              color: "white",
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              cursor: "pointer",
+              fontSize: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            ×
+          </button>
+          <video
+            autoPlay
+            controls
+            playsInline
+            style={{ width: "100%", display: "block", maxHeight: "80vh" }}
+          >
+            <source src="/video/Whatwedo.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

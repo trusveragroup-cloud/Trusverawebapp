@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { Zap, ArrowRight, Play } from "lucide-react";
+import Link from "next/link";
+import { Zap, ArrowRight } from "lucide-react";
 import { C } from "@/lib/colors";
 
 const DashboardMockup = dynamic(() => import("@/components/charts/DashboardMockup"), { ssr: false });
@@ -113,14 +114,10 @@ export default function HeroSection() {
 
           <div style={fadeStyle(heroVisible, 0.4)}>
             <div className="hero-btns" style={{ display: "flex", gap: 16 }}>
-              <button className="btn-gold">
+              <Link href="/contact" className="btn-gold">
                 Schedule a Consultation
                 <ArrowRight size={16} />
-              </button>
-              <button className="btn-outline">
-                <Play size={16} fill="white" />
-                See How It Works
-              </button>
+              </Link>
             </div>
           </div>
         </div>

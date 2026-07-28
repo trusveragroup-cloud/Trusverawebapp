@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { NAV } from "@/lib/data";
@@ -103,16 +104,28 @@ export default function NavBar() {
                     </div>
                   )}
                 </>
+              ) : item.href.startsWith("/") ? (
+                <Link
+                  href={item.href}
+                  className="nav-link"
+                  style={pathname === item.href ? { color: C.gold500, fontWeight: 600 } : undefined}
+                >
+                  {item.label}
+                </Link>
               ) : (
-                <a href={item.href} className="nav-link">
+                <a
+                  href={item.href}
+                  className="nav-link"
+                  style={pathname === item.href ? { color: C.gold500, fontWeight: 600 } : undefined}
+                >
                   {item.label}
                 </a>
               )}
             </div>
           ))}
-          <button className="btn-gold" style={{ fontSize: 13, padding: "10px 18px", marginLeft: 12 }}>
+          <Link href="/contact" className="btn-gold" style={{ fontSize: 13, padding: "10px 18px", marginLeft: 12 }}>
             Schedule a Consultation
-          </button>
+          </Link>
         </div>
 
         <button
@@ -176,15 +189,29 @@ export default function NavBar() {
                   </div>
                 ))}
               </div>
+            ) : item.href.startsWith("/") ? (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="nav-link"
+                style={pathname === item.href ? { color: C.gold500, fontWeight: 600 } : undefined}
+              >
+                {item.label}
+              </Link>
             ) : (
-              <a key={item.label} href={item.href} className="nav-link">
+              <a
+                key={item.label}
+                href={item.href}
+                className="nav-link"
+                style={pathname === item.href ? { color: C.gold500, fontWeight: 600 } : undefined}
+              >
                 {item.label}
               </a>
             )
           )}
-          <button className="btn-gold" style={{ fontSize: 13, padding: "10px 18px", marginTop: 8, justifyContent: "center" }}>
+          <Link href="/contact" className="btn-gold" style={{ fontSize: 13, padding: "10px 18px", marginTop: 8, justifyContent: "center" }}>
             Schedule a Consultation
-          </button>
+          </Link>
         </div>
       )}
     </nav>

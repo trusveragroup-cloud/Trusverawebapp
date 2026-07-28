@@ -1,13 +1,19 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { useReveal } from "@/lib/hooks/useReveal";
-import { BLOGS } from "@/lib/data";
+import { getFeaturedPost, getGridPosts } from "@/lib/blog";
 import { C } from "@/lib/colors";
 
 export default function BlogSection() {
   const [headerRef, headerVisible] = useReveal(0.2);
   const [ref, visible] = useReveal(0.1);
+
+  const featured = getFeaturedPost();
+  const gridPosts = getGridPosts();
+  const posts = (featured ? [featured, ...gridPosts] : gridPosts).slice(0, 3);
 
   return (
     <section id="blogs" style={{ background: C.cream100, padding: "80px 24px" }}>
@@ -39,8 +45,8 @@ export default function BlogSection() {
             Expert perspectives on B2B intent data, account-based marketing, and enterprise demand generation
             strategies for technology companies.
           </p>
-          <a
-            href="#"
+          <Link
+            href="/blog"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -54,24 +60,26 @@ export default function BlogSection() {
           >
             View All Articles
             <ArrowRight size={14} />
-          </a>
+          </Link>
         </div>
 
         <div ref={ref} className="blog-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24, marginTop: 48 }}>
-          {BLOGS.map((blog, i) => (
-            <div key={blog.title} className={`blog-card reveal-up d${i + 1}${visible ? " vis" : ""}`}>
-              <div style={{ height: 160, position: "relative", overflow: "hidden", background: blog.gradient }}>
+          {posts.map((post, i) => (
+            <Link
+              key={post.id}
+              href={`/blog/${post.slug}`}
+              className={`blog-card reveal-up d${i + 1}${visible ? " vis" : ""}`}
+              style={{ textDecoration: "none", display: "block" }}
+            >
+              <div style={{ height: 160, position: "relative", overflow: "hidden" }}>
+                <Image src={post.coverImage} alt={post.title} fill style={{ objectFit: "cover" }} />
                 <div
                   style={{
                     position: "absolute",
                     inset: 0,
-                    opacity: 0.04,
-                    backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.8) 1px, transparent 0)",
-                    backgroundSize: "20px 20px",
+                    background: "linear-gradient(180deg,transparent 40%,rgba(6,21,16,0.65) 100%)",
                   }}
                 />
-                <div style={{ position: "absolute", top: -20, right: -10, width: 120, height: 120, borderRadius: "50%", background: "rgba(200,151,62,0.06)" }} />
-                <div style={{ position: "absolute", top: 20, right: 30, width: 60, height: 60, borderRadius: "50%", background: "rgba(200,151,62,0.08)" }} />
                 <span
                   style={{
                     position: "absolute",
@@ -87,21 +95,21 @@ export default function BlogSection() {
                     padding: "3px 10px",
                   }}
                 >
-                  {blog.category}
+                  {post.category}
                 </span>
               </div>
               <div style={{ padding: 24 }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, color: C.textDark, lineHeight: 1.4, minHeight: 64 }}>{blog.title}</h4>
-                <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.65, marginBottom: 16, marginTop: 10 }}>{blog.excerpt}</p>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: C.textDark, lineHeight: 1.4, minHeight: 64 }}>{post.title}</h4>
+                <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.65, marginBottom: 16, marginTop: 10 }}>{post.excerpt}</p>
                 <div style={{ borderTop: `1px solid ${C.borderLight}`, paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, color: C.textLight }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <Calendar size={12} />
-                      {blog.date}
+                      {post.date}
                     </span>
                     <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <Clock size={12} />
-                      {blog.readTime}
+                      {post.readTime}
                     </span>
                   </div>
                   <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: C.forest700 }}>
@@ -110,7 +118,7 @@ export default function BlogSection() {
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

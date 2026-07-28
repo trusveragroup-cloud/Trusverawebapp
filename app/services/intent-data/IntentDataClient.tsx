@@ -8,7 +8,7 @@ import FirstPartyVsThirdParty from "@/components/sections/FirstPartyVsThirdParty
 import TheIntentEngine from "@/components/sections/TheIntentEngine";
 import WhyItMattersForB2B from "@/components/sections/WhyItMattersForB2B";
 import HowItConnects from "@/components/sections/HowItConnects";
-import BottomCTA from "@/components/sections/BottomCTA";
+import ContactFormSection from "@/components/sections/ContactFormSection";
 import FooterSection from "@/components/sections/FooterSection";
 
 export default function IntentDataClient() {
@@ -22,7 +22,7 @@ export default function IntentDataClient() {
       <TheIntentEngine />
       <WhyItMattersForB2B />
       <HowItConnects />
-      <BottomCTA />
+      <ContactFormSection defaultService="Intent Data" />
       <FooterSection />
     </>
   );

@@ -2,27 +2,22 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { C } from "@/lib/colors";
 
 const columns = [
   { title: "B2B Services", links: ["Intent Data", "Account Profiling", "BANT Qualified Leads", "Lead Generation", "Email Marketing"] },
-  { title: "Company", links: [{ label: "About", href: "/about" }, { label: "Case Study", href: "#casestudy" }, { label: "Careers", href: "#careers" }, { label: "Contact", href: "#contact" }] },
-  { title: "Resources", links: ["Case Studies", "Whitepapers", "Ebooks", "Webinars"] },
+  { title: "Company", links: [{ label: "About", href: "/about" }, { label: "Careers", href: "/careers" }, { label: "Contact", href: "/contact" }] },
+  { title: "Resources", links: [{ label: "HR Software", href: "/publishing/hr-software" }] },
 ];
 
-const legalLinks = ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR Compliance"];
+const legalLinks: (string | { label: string; href: string })[] = [
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms of Use", href: "/terms-of-use" },
+  "Cookie Policy",
+];
 
 type IconProps = { size: number; color: string };
-
-function LinkedinIcon({ size, color }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d="M6.94 8.5H3.56V20.5H6.94V8.5Z" fill={color} />
-      <path d="M5.25 7C6.35 7 7.25 6.1 7.25 5C7.25 3.9 6.35 3 5.25 3C4.15 3 3.25 3.9 3.25 5C3.25 6.1 4.15 7 5.25 7Z" fill={color} />
-      <path d="M13.5 8.5H10.25V20.5H13.5V14.3C13.5 12.6 14.15 11.4 15.65 11.4C17.15 11.4 17.5 12.6 17.5 14.3V20.5H20.75V13.5C20.75 10 19.15 8.2 16.35 8.2C14.5 8.2 13.7 9.2 13.5 9.8V8.5Z" fill={color} />
-    </svg>
-  );
-}
 
 function InstagramIcon({ size, color }: IconProps) {
   return (
@@ -45,49 +40,46 @@ function FacebookIcon({ size, color }: IconProps) {
   );
 }
 
-function TwitterIcon({ size, color }: IconProps) {
+function LinkedInIcon({ size, color }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path
-        d="M20.5 6.4C19.9 6.7 19.2 6.9 18.5 7C19.3 6.5 19.8 5.8 20.1 4.9C19.4 5.4 18.6 5.7 17.7 5.9C17 5.2 16.1 4.8 15 4.8C13 4.8 11.4 6.4 11.4 8.4C11.4 8.7 11.4 8.9 11.5 9.2C8.5 9 5.8 7.6 4 5.3C3.7 5.9 3.5 6.5 3.5 7.2C3.5 8.5 4.1 9.6 5.1 10.3C4.5 10.3 3.9 10.1 3.4 9.8V9.9C3.4 11.6 4.6 13.1 6.3 13.4C6 13.5 5.6 13.5 5.3 13.5C5.1 13.5 4.9 13.5 4.7 13.5C5.1 15 6.5 16 8.1 16.1C6.8 17.1 5.2 17.7 3.5 17.7C3.2 17.7 2.9 17.7 2.6 17.6C4.3 18.7 6.3 19.3 8.4 19.3C15 19.3 18.6 13.8 18.6 9C18.6 8.8 18.6 8.7 18.6 8.5C19.3 8 20 7.3 20.5 6.4Z"
-        fill={color}
+        d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
+        stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"
+      />
+      <rect x="2" y="9" width="4" height="12" stroke={color} strokeWidth={1.75}
+        strokeLinecap="round" strokeLinejoin="round"
+      />
+      <circle cx="4" cy="4" r="2" stroke={color} strokeWidth={1.75}
+        strokeLinecap="round" strokeLinejoin="round"
       />
     </svg>
   );
 }
 
 const socials = [
-  { Icon: LinkedinIcon, hoverBg: "rgba(10,102,194,0.2)", hoverColor: "#0A66C2" },
-  { Icon: InstagramIcon, hoverBg: "rgba(225,48,108,0.2)", hoverColor: "#E1306C" },
-  { Icon: FacebookIcon, hoverBg: "rgba(24,119,242,0.2)", hoverColor: "#1877F2" },
-  { Icon: TwitterIcon, hoverBg: "rgba(255,255,255,0.1)", hoverColor: "#FFFFFF" },
+  {
+    Icon: InstagramIcon,
+    href: "https://www.instagram.com/trusveragroup/",
+    hoverBg: "rgba(225,48,108,0.2)",
+    hoverColor: "#E1306C",
+    label: "Instagram"
+  },
+  {
+    Icon: FacebookIcon,
+    href: "https://www.facebook.com/profile.php?id=61588770370532",
+    hoverBg: "rgba(24,119,242,0.2)",
+    hoverColor: "#1877F2",
+    label: "Facebook"
+  },
+  {
+    Icon: LinkedInIcon,
+    href: "https://www.linkedin.com/in/trusvera-group-942854425/",
+    hoverBg: "rgba(10,102,194,0.2)",
+    hoverColor: "#0A66C2",
+    label: "LinkedIn"
+  },
 ];
-
-function SocialIcon({ Icon, hoverBg, hoverColor }: { Icon: (props: IconProps) => React.JSX.Element; hoverBg: string; hoverColor: string }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <a
-      href="#"
-      target="_blank"
-      rel="noopener noreferrer"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: "50%",
-        background: hovered ? hoverBg : "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "all 0.2s",
-      }}
-    >
-      <Icon size={16} color={hovered ? hoverColor : "rgba(255,255,255,0.5)"} />
-    </a>
-  );
-}
 
 function FooterLink({ label, href = "#" }: { label: string; href?: string }) {
   const [hovered, setHovered] = useState(false);
@@ -110,18 +102,33 @@ function FooterLink({ label, href = "#" }: { label: string; href?: string }) {
   );
 }
 
-function LegalLink({ label }: { label: string }) {
+function LegalLink({ label, href }: { label: string; href?: string }) {
   const [hovered, setHovered] = useState(false);
+  const style = {
+    fontSize: 12,
+    color: hovered ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)",
+    cursor: "pointer",
+    transition: "color 0.2s",
+  };
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ ...style, textDecoration: "none" }}
+      >
+        {label}
+      </Link>
+    );
+  }
+
   return (
     <span
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        fontSize: 12,
-        color: hovered ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)",
-        cursor: "pointer",
-        transition: "color 0.2s",
-      }}
+      style={style}
     >
       {label}
     </span>
@@ -159,7 +166,40 @@ export default function FooterSection() {
             </p>
             <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
               {socials.map((s, i) => (
-                <SocialIcon key={i} Icon={s.Icon} hoverBg={s.hoverBg} hoverColor={s.hoverColor} />
+                <a
+                  key={i}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(255,255,255,0.06)",
+                      cursor: "pointer",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = s.hoverBg;
+                      const svg = e.currentTarget.querySelector("svg");
+                      if (svg) svg.querySelectorAll("path,rect,circle").forEach((el) => el.setAttribute("stroke", s.hoverColor));
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      const svg = e.currentTarget.querySelector("svg");
+                      if (svg) svg.querySelectorAll("path,rect,circle").forEach((el) => el.setAttribute("stroke", "rgba(254,253,251,0.55)"));
+                    }}
+                  >
+                    <s.Icon size={18} color="rgba(254,253,251,0.55)" />
+                  </div>
+                </a>
               ))}
             </div>
           </div>
@@ -181,9 +221,13 @@ export default function FooterSection() {
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>2026 TrusVera Group. All rights reserved.</span>
           <div style={{ display: "flex", gap: 20 }}>
-            {legalLinks.map((link) => (
-              <LegalLink key={link} label={link} />
-            ))}
+            {legalLinks.map((link) =>
+              typeof link === "string" ? (
+                <LegalLink key={link} label={link} />
+              ) : (
+                <LegalLink key={link.label} label={link.label} href={link.href} />
+              )
+            )}
           </div>
         </div>
       </div>

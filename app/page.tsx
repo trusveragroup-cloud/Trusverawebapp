@@ -11,7 +11,7 @@ import CaseStudySection from "@/components/sections/CaseStudySection";
 import BlogSection from "@/components/sections/BlogSection";
 import ComplianceSection from "@/components/sections/ComplianceSection";
 import ResourcesSection from "@/components/sections/ResourcesSection";
-import BottomCTA from "@/components/sections/BottomCTA";
+import ContactFormSection from "@/components/sections/ContactFormSection";
 import FooterSection from "@/components/sections/FooterSection";
 
 export default function Home() {
@@ -35,7 +35,7 @@ export default function Home() {
       <BlogSection />
       <ComplianceSection />
       <ResourcesSection />
-      <BottomCTA />
+      <ContactFormSection />
       <FooterSection />
     </div>
   );

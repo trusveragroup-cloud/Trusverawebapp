@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Database, UserCheck, Award, FileText, ArrowRight } from "lucide-react";
 import { useReveal } from "@/lib/hooks/useReveal";
 import { DELIVER } from "@/lib/data";
@@ -105,8 +106,8 @@ export default function WhatWeDeliver() {
                   ))}
                 </div>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 16 }}>
-                  <a
-                    href="#"
+                  <Link
+                    href={item.href}
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
@@ -119,7 +120,7 @@ export default function WhatWeDeliver() {
                   >
                     Learn More
                     <ArrowRight size={14} />
-                  </a>
+                  </Link>
                 </div>
               </div>
             );

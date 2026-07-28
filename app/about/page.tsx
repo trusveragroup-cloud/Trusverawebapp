@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   Zap,
@@ -23,7 +24,7 @@ import {
 } from "lucide-react";
 import NavBar from "@/components/sections/NavBar";
 import FooterSection from "@/components/sections/FooterSection";
-import BottomCTA from "@/components/sections/BottomCTA";
+import ContactFormSection from "@/components/sections/ContactFormSection";
 import { useReveal } from "@/lib/hooks/useReveal";
 import { AnimatedNum } from "@/lib/hooks/useAnimatedNum";
 import { C } from "@/lib/colors";
@@ -49,16 +50,6 @@ function GoldBadge({ children, dark = true }: { children: React.ReactNode; dark?
     >
       {children}
     </span>
-  );
-}
-
-function LinkedinIcon({ size, color }: { size: number; color: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d="M6.94 8.5H3.56V20.5H6.94V8.5Z" fill={color} />
-      <path d="M5.25 7C6.35 7 7.25 6.1 7.25 5C7.25 3.9 6.35 3 5.25 3C4.15 3 3.25 3.9 3.25 5C3.25 6.1 4.15 7 5.25 7Z" fill={color} />
-      <path d="M13.5 8.5H10.25V20.5H13.5V14.3C13.5 12.6 14.15 11.4 15.65 11.4C17.15 11.4 17.5 12.6 17.5 14.3V20.5H20.75V13.5C20.75 10 19.15 8.2 16.35 8.2C14.5 8.2 13.7 9.2 13.5 9.8V8.5Z" fill={color} />
-    </svg>
   );
 }
 
@@ -124,6 +115,18 @@ function AboutHero() {
         overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: "url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          opacity: 0.12,
+          zIndex: 0,
+        }}
+      />
       <DotGrid />
       <div style={{ position: "absolute", top: -60, right: -60 }}>
         <HexOutline size={400} opacity={0.04} duration={60} />
@@ -175,7 +178,6 @@ function AboutHero() {
 
         <motion.div variants={item} style={{ display: "flex", justifyContent: "center", gap: 32, marginTop: 32, flexWrap: "wrap" }}>
           {[
-            { top: "Founded 2019", bottom: "Pune, India", gold: false },
             { top: "150M+", bottom: "Technology Buyers in Database", gold: true },
             { top: "97%", bottom: "Client Retention Rate", gold: true },
           ].map((pill) => (
@@ -226,12 +228,6 @@ const TIMELINE: { year: string; side: "left" | "right"; title: string; desc: str
     desc: "Launched our proprietary intent data tracking capability, monitoring buyer signals across 27 technology categories for enterprise clients.",
   },
   {
-    year: "2021",
-    side: "left",
-    title: "US Market Expansion",
-    desc: "Opened our North America presence serving Fortune 1000 technology companies from Delaware, bringing B2B intelligence to the US enterprise market.",
-  },
-  {
     year: "2022",
     side: "right",
     title: "BANT Qualification at Scale",
@@ -261,9 +257,6 @@ function TimelineCard({ ev, index }: { ev: (typeof TIMELINE)[number]; index: num
       transition={{ duration: 0.6, delay: (index % 2) * 0.1, ease: EASE }}
       style={{ background: "#fff", borderRadius: 14, padding: 28, border: `1px solid ${C.borderLight}` }}
     >
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.gold500, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
-        {ev.year}
-      </div>
       <h4 style={{ fontSize: 18, fontWeight: 700, color: C.textDark, marginBottom: 10 }}>{ev.title}</h4>
       <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.7 }}>{ev.desc}</p>
     </motion.div>
@@ -391,7 +384,7 @@ const VALUES = [
   { title: "Be relentless about client pipeline impact.", desc: "We measure success by the qualified revenue opportunities we create for our clients, not vanity metrics or activity volumes." },
   { title: "Treat every buyer signal with precision.", desc: "Data integrity is non-negotiable. We verify, validate, and continuously refresh every contact, account, and intent signal we deliver." },
   { title: "Build trust through radical transparency.", desc: "We share what works and what does not. Monthly performance reports, clear attribution, and honest communication are part of every engagement." },
-  { title: "Think globally. Act with local expertise.", desc: "With teams in Pune and Delaware, we combine global data coverage with the cultural and market intelligence that enterprise buyers expect." },
+  { title: "Think globally. Act with local expertise.", desc: "With our team in Pune, we combine global data coverage with the cultural and market intelligence that enterprise buyers expect." },
 ];
 
 const COMMITMENTS = [
@@ -665,7 +658,7 @@ function VideoSection() {
                   borderRadius: 20,
                 }}
               >
-                <source src="/video/trusvera-overview.mp4" type="video/mp4" />
+                <source src="/video/Whatwedo.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             ) : (
@@ -697,7 +690,7 @@ function VideoSection() {
                 >
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>TrusVera Group, Company Overview</span>
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(0,0,0,0.4)", padding: "3px 10px", borderRadius: 4 }}>
-                    3:47
+                    8:16
                   </span>
                 </div>
               </div>
@@ -708,7 +701,7 @@ function VideoSection() {
         <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 32, flexWrap: "wrap" }}>
           {[
             { Icon: Play, label: "Company Overview" },
-            { Icon: Clock, label: "3 min watch" },
+            { Icon: Clock, label: "8 min watch" },
             { Icon: Users, label: "For Sales Leaders" },
           ].map((p) => (
             <div
@@ -737,45 +730,28 @@ function VideoSection() {
 
 /* ============================== LEADERSHIP TEAM ============================== */
 
-function LeaderSVG({ variant }: { variant: "a" | "b" | "c" }) {
-  const shapes: Record<string, React.ReactNode> = {
-    a: (
-      <>
-        <circle cx={150} cy={100} r={52} fill={C.forest700} />
-        <path d="M70 280 C70 190 110 150 150 150 C190 150 230 190 230 280 Z" fill={C.forest700} />
-        <circle cx={150} cy={100} r={52} fill="none" stroke={C.gold500} strokeWidth={1.5} opacity={0.5} />
-        <rect x={130} y={40} width={40} height={4} fill={C.gold500} opacity={0.6} />
-      </>
-    ),
-    b: (
-      <>
-        <ellipse cx={150} cy={105} rx={48} ry={54} fill={C.forest700} />
-        <path d="M78 280 C78 195 112 158 150 158 C188 158 222 195 222 280 Z" fill={C.forest700} />
-        <polygon points="150,45 175,80 125,80" fill={C.gold500} opacity={0.5} />
-      </>
-    ),
-    c: (
-      <>
-        <circle cx={150} cy={102} r={50} fill={C.forest700} />
-        <path d="M74 280 C74 192 108 152 150 152 C192 152 226 192 226 280 Z" fill={C.forest700} />
-        <circle cx={150} cy={102} r={50} fill="none" stroke={C.gold500} strokeWidth={1.5} opacity={0.4} />
-        <circle cx={195} cy={65} r={5} fill={C.gold500} opacity={0.6} />
-      </>
-    ),
-  };
-
-  return (
-    <svg width="100%" height="280" viewBox="0 0 300 280" preserveAspectRatio="xMidYMid slice" style={{ display: "block" }}>
-      <rect width={300} height={280} fill={C.forest800} />
-      {shapes[variant]}
-    </svg>
-  );
-}
-
-const LEADERS = [
-  { name: "Rajiv Sharma", role: "Chief Executive Officer", bio: "15+ years in B2B technology marketing. Former demand generation lead at enterprise technology firms across APAC and North America.", variant: "a" as const },
-  { name: "Priya Mehta", role: "Head of Data Intelligence", bio: "Specialist in intent data architecture and buyer signal analysis. Leads TrusVera's proprietary 150M+ buyer database and real-time validation systems.", variant: "b" as const },
-  { name: "James O'Brien", role: "VP, Client Success, North America", bio: "Based in Delaware. Manages enterprise client relationships across Fortune 1000 technology companies and leads TrusVera's North America expansion.", variant: "c" as const },
+const FOUNDERS = [
+  {
+    name: "Arbaz Thange",
+    role: "Founder & Director",
+    bio: "Co-founder of TrusVera Group, driving the vision for precision B2B intelligence and demand generation across global enterprise markets.",
+    image: "/Founder Image/Arbaz Thange_photo.png",
+    alt: "Arbaz Thange - Founder & Director",
+  },
+  {
+    name: "Dinesh Lilani",
+    role: "Founder & Director",
+    bio: "Co-founder of TrusVera Group, bringing deep expertise in B2B sales strategy and enterprise account development to revenue teams worldwide.",
+    image: "/Founder Image/Dinesh Lilani.jpg",
+    alt: "Dinesh Lilani - Founder & Director",
+  },
+  {
+    name: "Pooja Rasal",
+    role: "Founder",
+    bio: "Co-founder of TrusVera Group, contributing strategic leadership and operational excellence to drive TrusVera's growth in the B2B intelligence space.",
+    image: "/Founder Image/Poojadi.jpeg",
+    alt: "Pooja Rasal - Founder",
+  },
 ];
 
 function LeadershipTeam() {
@@ -783,52 +759,58 @@ function LeadershipTeam() {
 
   return (
     <section style={{ background: C.cream50, padding: "80px 24px" }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .founders-grid { flex-direction: column !important; align-items: center !important; }
+          .founder-card { width: 100% !important; max-width: 400px !important; }
+        }
+      `}</style>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
         <div ref={headerRef} className={`reveal-up${headerVisible ? " vis" : ""}`} style={{ textAlign: "center", marginBottom: 56 }}>
-          <h2 style={{ fontFamily: "var(--font-dm-serif)", fontSize: 36, color: C.forest800 }}>The Team Behind TrusVera</h2>
+          <h2 style={{ fontFamily: "var(--font-dm-serif)", fontSize: 36, color: C.forest800 }}>Meet the Founders</h2>
           <p style={{ fontSize: 15, color: C.textMuted, maxWidth: 560, margin: "12px auto 0", lineHeight: 1.7 }}>
             Experienced B2B marketing and technology professionals dedicated to building enterprise pipeline for our
             clients.
           </p>
         </div>
 
-        <div className="leader-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }}>
-          {LEADERS.map((leader) => (
-            <div key={leader.name} className="leader-card" style={{ height: 380, background: `linear-gradient(145deg, ${C.forest900}, ${C.forest800})` }}>
-              <LeaderSVG variant={leader.variant} />
-              <div className="leader-overlay" />
-              <div className="leader-info">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                  <div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>{leader.name}</div>
-                    <div style={{ fontSize: 13, color: C.gold400, marginTop: 4 }}>{leader.role}</div>
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginTop: 10 }}>{leader.bio}</p>
-                  </div>
+        <div className="founders-grid" style={{ display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", maxWidth: 1300, margin: "0 auto" }}>
+          {FOUNDERS.map((founder) => (
+            <div
+              key={founder.name}
+              className="founder-card"
+              style={{
+                background: C.cream100,
+                borderRadius: 16,
+                overflow: "hidden",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+                width: 380,
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ position: "relative", height: 420 }}>
+                <Image
+                  src={founder.image}
+                  alt={founder.alt}
+                  fill
+                  style={{ objectFit: "cover", objectPosition: "top" }}
+                />
+              </div>
+              <div style={{ padding: "24px 28px", background: C.cream100 }}>
+                <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 24, color: C.forest800, margin: "0 0 4px" }}>
+                  {founder.name}
                 </div>
-                <a
-                  href="#"
-                  aria-label={`${leader.name} on LinkedIn`}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: "rgba(255,255,255,0.1)",
-                    marginTop: 14,
-                  }}
-                >
-                  <LinkedinIcon size={15} color="#fff" />
-                </a>
+                <div style={{ fontFamily: "var(--font-inter)", fontSize: 14, color: C.forest600, fontWeight: 600, margin: "0 0 12px" }}>
+                  {founder.role}
+                </div>
+                <div style={{ width: 40, height: 2, background: C.gold400, marginBottom: 12 }} />
+                <p style={{ fontFamily: "var(--font-inter)", fontSize: 14, color: C.slate600, lineHeight: 1.65 }}>
+                  {founder.bio}
+                </p>
               </div>
             </div>
           ))}
         </div>
-
-        <p style={{ fontSize: 12, color: C.textMuted, textAlign: "center", marginTop: 24 }}>
-          * Leadership profiles for illustrative purposes. Contact us to meet the TrusVera team.
-        </p>
       </div>
     </section>
   );
@@ -841,17 +823,9 @@ const OFFICES = [
     flag: "\u{1F1EE}\u{1F1F3}",
     country: "INDIA",
     title: "Pune Headquarters",
-    address: "Nyati Enthral, 6th Floor, Office 607, Opposite Reliance Mall, Kharadi, Pune 411014",
+    address: "Kasarwadi, PCMC, Pune - 411034",
     availability: "Availability: IST Business Hours",
     note: "Primary Operations Hub",
-  },
-  {
-    flag: "\u{1F1FA}\u{1F1F8}",
-    country: "USA",
-    title: "North America Office",
-    address: "16192 Coastal HWY, Lewes, DE, Sussex 19958",
-    availability: "Availability: EST Business Hours",
-    note: "Enterprise Client Relations",
   },
 ];
 
@@ -865,7 +839,7 @@ function GlobalPresence() {
           <h2 style={{ fontFamily: "var(--font-dm-serif)", fontSize: 32, color: "#fff" }}>Global Reach. Local Expertise.</h2>
         </div>
 
-        <div className="office-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 32 }}>
+        <div className="office-grid" style={{ display: "grid", gridTemplateColumns: "1fr", maxWidth: 460, margin: "0 auto", gap: 32 }}>
           {OFFICES.map((o, i) => (
             <motion.div
               key={o.country}
@@ -961,7 +935,7 @@ export default function AboutPage() {
       <LeadershipTeam />
       <GlobalPresence />
       <ComplianceStrip />
-      <BottomCTA />
+      <ContactFormSection />
       <FooterSection />
     </div>
   );

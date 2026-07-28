@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useReveal } from "@/lib/hooks/useReveal";
 import { RESOURCES } from "@/lib/data";
@@ -32,11 +33,19 @@ export default function ResourcesSection() {
           </p>
         </div>
 
-        <div ref={ref} className="res-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 24 }}>
+        <div
+          ref={ref}
+          className="res-grid"
+          style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24, maxWidth: 800, margin: "0 auto" }}
+        >
           {RESOURCES.map((resource, i) => {
             const Bg = bgs[i];
             return (
-              <div key={resource.title} className={`resource-card reveal-up d${i + 1}${visible ? " vis" : ""}`}>
+              <Link
+                key={resource.title}
+                href={resource.href}
+                className={`resource-card reveal-up d${i + 1}${visible ? " vis" : ""}`}
+              >
                 <Bg />
                 <div className="rc-overlay" />
                 <div style={{ position: "relative", zIndex: 2, padding: 24, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -58,7 +67,7 @@ export default function ResourcesSection() {
                     <ArrowRight size={14} />
                   </span>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
