@@ -1,10 +1,10 @@
 "use client"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { C } from "@/lib/colors"
 
-export default function AuthHandlerPage() {
+function AuthHandlerContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const type = searchParams.get("type")
@@ -168,5 +168,31 @@ export default function AuthHandlerPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
+  )
+}
+
+export default function AuthHandlerPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: "100vh",
+        background: "#0F3D25",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <div style={{
+          width: 32,
+          height: 32,
+          border: "3px solid rgba(255,255,255,0.2)",
+          borderTop: "3px solid #C9A84C",
+          borderRadius: "50%",
+          animation: "spin 0.8s linear infinite",
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    }>
+      <AuthHandlerContent />
+    </Suspense>
   )
 }
