@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { C } from "@/lib/colors"
@@ -33,7 +33,7 @@ const STATUS_TABS = [
   { id: "Archived", label: "Archived", icon: Archive },
 ]
 
-export default function AdminBlogsPage() {
+function AdminBlogsPageContent() {
   const { can } = usePermissions()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -522,5 +522,30 @@ export default function AdminBlogsPage() {
         })}
       </div>
     </div>
+  )
+}
+
+export default function AdminBlogsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "400px",
+      }}>
+        <div style={{
+          width: 32,
+          height: 32,
+          border: "3px solid #E5E7EB",
+          borderTop: "3px solid #166B4A",
+          borderRadius: "50%",
+          animation: "spin 0.8s linear infinite",
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    }>
+      <AdminBlogsPageContent />
+    </Suspense>
   )
 }
