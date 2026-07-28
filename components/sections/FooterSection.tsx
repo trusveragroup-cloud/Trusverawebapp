@@ -8,13 +8,25 @@ import { C } from "@/lib/colors";
 const columns = [
   { title: "B2B Services", links: ["Intent Data", "Account Profiling", "BANT Qualified Leads", "Lead Generation", "Email Marketing"] },
   { title: "Company", links: [{ label: "About", href: "/about" }, { label: "Careers", href: "/careers" }, { label: "Contact", href: "/contact" }] },
-  { title: "Resources", links: [{ label: "HR Software", href: "/publishing/hr-software" }] },
+  {
+    title: "Resources",
+    links: [
+      { label: "Tech", href: "https://bytesphere.com" },
+      { label: "Business", href: "https://bytesphere.com" },
+      { label: "Energy", href: "https://bytesphere.com" },
+      { label: "Finance", href: "https://bytesphere.com" },
+      { label: "Healthcare", href: "https://bytesphere.com" },
+      { label: "Logistics", href: "https://bytesphere.com" },
+      { label: "Marketing", href: "https://bytesphere.com" },
+      { label: "Startups", href: "https://bytesphere.com" },
+    ],
+  },
 ];
 
 const legalLinks: (string | { label: string; href: string })[] = [
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Terms of Use", href: "/terms-of-use" },
-  "Cookie Policy",
+  { label: "Cookie Policy", href: "/cookie-policy" },
 ];
 
 type IconProps = { size: number; color: string };
@@ -83,22 +95,39 @@ const socials = [
 
 function FooterLink({ label, href = "#" }: { label: string; href?: string }) {
   const [hovered, setHovered] = useState(false);
+  const style = {
+    display: "block",
+    fontSize: 13,
+    color: hovered ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.4)",
+    marginBottom: 10,
+    textDecoration: "none",
+    transition: "color 0.2s",
+  };
+
+  if (href.startsWith("http")) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={style}
+      >
+        {label}
+      </a>
+    );
+  }
+
   return (
-    <a
+    <Link
       href={href}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "block",
-        fontSize: 13,
-        color: hovered ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.4)",
-        marginBottom: 10,
-        textDecoration: "none",
-        transition: "color 0.2s",
-      }}
+      style={style}
     >
       {label}
-    </a>
+    </Link>
   );
 }
 

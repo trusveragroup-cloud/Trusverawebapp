@@ -5,12 +5,15 @@ const publicRoutes = [
   "/admin/login",
   "/admin/forgot-password",
   "/admin/set-password",
-  "/api/auth/callback",
-  "/api/auth/login",
-  "/api/auth/logout",
+  "/admin/auth-handler",
 ]
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request,
   })

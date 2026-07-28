@@ -88,11 +88,14 @@ export default function NavBar() {
                           {group.items.map((sub) => {
                             const { label, href } = dropdownItemProps(sub);
                             const isActive = pathname === href;
+                            const isExternal = href.startsWith("http");
                             return (
                               <a
                                 key={label}
                                 href={href}
                                 className="dropdown-item"
+                                target={isExternal ? "_blank" : undefined}
+                                rel={isExternal ? "noopener noreferrer" : undefined}
                                 style={isActive ? { color: C.gold500, fontWeight: 600 } : undefined}
                               >
                                 {label}
@@ -169,10 +172,13 @@ export default function NavBar() {
                     {group.items.map((sub) => {
                       const { label, href } = dropdownItemProps(sub);
                       const isActive = pathname === href;
+                      const isExternal = href.startsWith("http");
                       return (
                         <a
                           key={label}
                           href={href}
+                          target={isExternal ? "_blank" : undefined}
+                          rel={isExternal ? "noopener noreferrer" : undefined}
                           style={{
                             display: "block",
                             padding: "6px 0",

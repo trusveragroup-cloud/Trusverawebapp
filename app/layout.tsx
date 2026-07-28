@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Serif_Display, Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
+import CookieConsent from "@/components/CookieConsent";
 
 const dmSerif = DM_Serif_Display({
   subsets: ["latin"],
@@ -35,7 +36,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${dmSerif.variable} ${playfair.variable} ${inter.variable}`}>
-      <body style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>{children}</body>
+      <body style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+        {children}
+        <CookieConsent />
+      </body>
     </html>
   );
 }
