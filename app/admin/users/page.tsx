@@ -114,6 +114,144 @@ const PERMISSION_GROUPS = [
   },
 ];
 
+const BS_PERMISSION_GROUPS = [
+  {
+    group: "Content",
+    permissions: [
+      { key: "view_bs_articles", label: "View Articles" },
+      { key: "create_bs_articles", label: "Create Articles" },
+      { key: "edit_bs_articles", label: "Edit Articles" },
+      { key: "delete_bs_articles", label: "Delete Articles" },
+      { key: "view_bs_blogs", label: "View Blogs" },
+      { key: "create_bs_blogs", label: "Create Blogs" },
+      { key: "edit_bs_blogs", label: "Edit Blogs" },
+      { key: "delete_bs_blogs", label: "Delete Blogs" },
+    ]
+  },
+  {
+    group: "Organisation",
+    permissions: [
+      { key: "view_bs_authors", label: "View Authors" },
+      { key: "manage_bs_authors", label: "Manage Authors" },
+      { key: "view_bs_taxonomy", label: "View Taxonomy" },
+      { key: "manage_bs_taxonomy", label: "Manage Taxonomy" },
+    ]
+  },
+  {
+    group: "Audience & Contacts",
+    permissions: [
+      { key: "view_bs_subscribers", label: "View Subscribers" },
+      { key: "manage_bs_subscribers", label: "Manage Subscribers" },
+      { key: "view_bs_contacts", label: "View Contacts" },
+      { key: "edit_bs_contacts", label: "Edit Contacts" },
+      { key: "view_bs_dashboard", label: "View Dashboard" },
+    ]
+  },
+];
+
+type PermissionGroup = { group: string; permissions: { key: string; label: string }[] };
+
+function PermissionGroupSection({
+  group, topBorder, isGranted, togglePermission, saving,
+}: {
+  group: PermissionGroup
+  topBorder: boolean
+  isGranted: (role: string, permission: string) => boolean
+  togglePermission: (role: string, permission: string) => void
+  saving: string | null
+}) {
+  return (
+    <div key={group.group}>
+      {/* GROUP HEADER */}
+      <div style={{
+        padding: "10px 20px",
+        background: "rgba(22,107,74,0.04)",
+        borderTop: topBorder ? `1px solid ${C.slate200}` : "none",
+        fontFamily: "var(--font-inter)",
+        fontSize: 12, fontWeight: 700,
+        color: C.forest700,
+        textTransform: "uppercase",
+        letterSpacing: "1px"
+      }}>
+        {group.group}
+      </div>
+
+      {/* PERMISSION ROWS */}
+      {group.permissions.map((perm) => (
+        <div
+          key={perm.key}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "220px repeat(4, 1fr)",
+            padding: "14px 20px",
+            borderTop: `1px solid ${C.slate100}`,
+            alignItems: "center",
+          }}
+        >
+          {/* PERMISSION LABEL */}
+          <div style={{
+            fontFamily: "var(--font-inter)",
+            fontSize: 13, color: C.forest800,
+          }}>
+            {perm.label}
+          </div>
+
+          {/* ROLE TOGGLES */}
+          {ROLES.map(role => {
+            const granted = isGranted(role, perm.key);
+            const isSuperAdmin = role === "Super Admin";
+            const key = `${role}-${perm.key}`;
+            const isSaving = saving === key;
+
+            return (
+              <div key={role} style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}>
+                {isSaving ? (
+                  <div style={{
+                    width: 20, height: 20,
+                    border: `2px solid ${C.slate200}`,
+                    borderTop: `2px solid ${C.forest600}`,
+                    borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite"
+                  }} />
+                ) : (
+                  <div
+                    onClick={() => !isSuperAdmin && togglePermission(role, perm.key)}
+                    style={{
+                      width: 40, height: 22,
+                      borderRadius: 11,
+                      background: granted ? C.forest600 : C.slate200,
+                      position: "relative",
+                      cursor: isSuperAdmin ? "not-allowed" : "pointer",
+                      transition: "background 0.2s",
+                      opacity: isSuperAdmin ? 0.6 : 1,
+                    }}
+                    title={isSuperAdmin ? "Super Admin always has all permissions" : ""}
+                  >
+                    <div style={{
+                      width: 16, height: 16,
+                      background: "white",
+                      borderRadius: "50%",
+                      position: "absolute",
+                      top: 3,
+                      left: granted ? 21 : 3,
+                      transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function PermissionsMatrix() {
   const [permissions, setPermissions] = useState<
     { role: string; permission: string; granted: boolean }[]
@@ -275,94 +413,39 @@ function PermissionsMatrix() {
 
         {/* PERMISSION GROUPS */}
         {PERMISSION_GROUPS.map((group, gi) => (
-          <div key={group.group}>
-            {/* GROUP HEADER */}
-            <div style={{
-              padding: "10px 20px",
-              background: "rgba(22,107,74,0.04)",
-              borderTop: gi > 0 ? `1px solid ${C.slate200}` : "none",
-              fontFamily: "var(--font-inter)",
-              fontSize: 12, fontWeight: 700,
-              color: C.forest700,
-              textTransform: "uppercase",
-              letterSpacing: "1px"
-            }}>
-              {group.group}
-            </div>
+          <PermissionGroupSection
+            key={group.group}
+            group={group}
+            topBorder={gi > 0}
+            isGranted={isGranted}
+            togglePermission={togglePermission}
+            saving={saving}
+          />
+        ))}
 
-            {/* PERMISSION ROWS */}
-            {group.permissions.map((perm) => (
-              <div
-                key={perm.key}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "220px repeat(4, 1fr)",
-                  padding: "14px 20px",
-                  borderTop: `1px solid ${C.slate100}`,
-                  alignItems: "center",
-                }}
-              >
-                {/* PERMISSION LABEL */}
-                <div style={{
-                  fontFamily: "var(--font-inter)",
-                  fontSize: 13, color: C.forest800,
-                }}>
-                  {perm.label}
-                </div>
+        {/* BYTESPHERE SECTION LABEL */}
+        <div style={{
+          padding: "10px 20px",
+          background: "rgba(22,107,74,0.04)",
+          borderTop: `1px solid ${C.slate200}`,
+          fontFamily: "var(--font-inter)",
+          fontSize: 12, fontWeight: 700,
+          color: C.forest700,
+          textTransform: "uppercase",
+          letterSpacing: "1px"
+        }}>
+          Bytesphere Permissions
+        </div>
 
-                {/* ROLE TOGGLES */}
-                {ROLES.map(role => {
-                  const granted = isGranted(role, perm.key);
-                  const isSuperAdmin = role === "Super Admin";
-                  const key = `${role}-${perm.key}`;
-                  const isSaving = saving === key;
-
-                  return (
-                    <div key={role} style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}>
-                      {isSaving ? (
-                        <div style={{
-                          width: 20, height: 20,
-                          border: `2px solid ${C.slate200}`,
-                          borderTop: `2px solid ${C.forest600}`,
-                          borderRadius: "50%",
-                          animation: "spin 0.8s linear infinite"
-                        }} />
-                      ) : (
-                        <div
-                          onClick={() => !isSuperAdmin && togglePermission(role, perm.key)}
-                          style={{
-                            width: 40, height: 22,
-                            borderRadius: 11,
-                            background: granted ? C.forest600 : C.slate200,
-                            position: "relative",
-                            cursor: isSuperAdmin ? "not-allowed" : "pointer",
-                            transition: "background 0.2s",
-                            opacity: isSuperAdmin ? 0.6 : 1,
-                          }}
-                          title={isSuperAdmin ? "Super Admin always has all permissions" : ""}
-                        >
-                          <div style={{
-                            width: 16, height: 16,
-                            background: "white",
-                            borderRadius: "50%",
-                            position: "absolute",
-                            top: 3,
-                            left: granted ? 21 : 3,
-                            transition: "left 0.2s",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                          }} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+        {BS_PERMISSION_GROUPS.map((group) => (
+          <PermissionGroupSection
+            key={group.group}
+            group={group}
+            topBorder
+            isGranted={isGranted}
+            togglePermission={togglePermission}
+            saving={saving}
+          />
         ))}
       </div>
 
