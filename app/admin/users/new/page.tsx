@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 
 const ROLE_INFO: Record<string, string> = {
-  "Super Admin": "Full access to all features including user management, all contacts, blogs, and settings.",
-  "Sales Admin": "Can view and manage contacts, add manual entries, and update contact status.",
-  "Content Admin": "Can create, edit, and publish blog posts. Read-only access to contacts.",
-  "Viewer": "Read-only access to contacts and published blogs. Cannot make changes.",
+  "Super Admin": "Full access to all Trusvera and ByteSphere features including user management, permissions, all contacts, all content, and subscriber data.",
+  "Sales Admin": "Can view and manage Trusvera contacts, add manual entries, and update contact status. Also has access to ByteSphere contact enquiries.",
+  "Content Admin": "Can create, edit, and publish Trusvera blogs and all ByteSphere content including articles, blogs, authors and taxonomy. Read-only access to contacts on both platforms.",
+  "Viewer": "Read-only access to contacts, blogs, ByteSphere articles, blogs, authors, taxonomy and dashboard. Cannot make any changes.",
 };
 
 const ROLE_STYLES: Record<string, { color: string; badgeBg: string }> = {
