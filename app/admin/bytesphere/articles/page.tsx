@@ -6,6 +6,8 @@ import {
   AlertCircle, Copy, Loader2, Newspaper, Pencil, Plus, Search, Star, Trash2,
 } from "lucide-react"
 import { C } from "@/lib/colors"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
 import type { BsArticleWithRelations, BsAuthor, BsCategory, BsContentStatus } from "@/lib/bytesphere/types"
 
 const gridColumns = "minmax(220px,2fr) 130px 140px 110px 90px 110px 130px"
@@ -41,6 +43,7 @@ const actionButtonStyle: React.CSSProperties = {
 }
 
 export default function ArticlesListPage() {
+  const { can, loading: adminLoading } = useAdmin()
   const [articles, setArticles] = useState<BsArticleWithRelations[]>([])
   const [categories, setCategories] = useState<BsCategory[]>([])
   const [authors, setAuthors] = useState<BsAuthor[]>([])
@@ -164,6 +167,17 @@ export default function ArticlesListPage() {
     }
   }
 
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("view_bs_articles")) return <AccessDenied />
+
   return (
     <div style={{ padding: 32 }}>
       <style>{`
@@ -182,26 +196,28 @@ export default function ArticlesListPage() {
           </div>
         </div>
 
-        <Link
-          href="/admin/bytesphere/articles/new"
-          style={{
-            background: C.forest600,
-            color: C.cream100,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            fontFamily: "var(--font-inter)",
-            fontSize: 13,
-            fontWeight: 700,
-            padding: "10px 20px",
-            borderRadius: 8,
-            textDecoration: "none",
-            flexShrink: 0,
-          }}
-        >
-          <Plus size={16} />
-          New Article
-        </Link>
+        {can("create_bs_articles") && (
+          <Link
+            href="/admin/bytesphere/articles/new"
+            style={{
+              background: C.forest600,
+              color: C.cream100,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: "var(--font-inter)",
+              fontSize: 13,
+              fontWeight: 700,
+              padding: "10px 20px",
+              borderRadius: 8,
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            <Plus size={16} />
+            New Article
+          </Link>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
@@ -375,25 +391,27 @@ export default function ArticlesListPage() {
                 <p style={{ fontFamily: "var(--font-inter)", fontSize: 16, color: C.slate500, marginBottom: 16 }}>
                   No articles match your filters.
                 </p>
-                <Link
-                  href="/admin/bytesphere/articles/new"
-                  style={{
-                    background: C.forest600,
-                    color: C.cream100,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    fontFamily: "var(--font-inter)",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    padding: "10px 20px",
-                    borderRadius: 8,
-                    textDecoration: "none",
-                  }}
-                >
-                  <Plus size={16} />
-                  New Article
-                </Link>
+                {can("create_bs_articles") && (
+                  <Link
+                    href="/admin/bytesphere/articles/new"
+                    style={{
+                      background: C.forest600,
+                      color: C.cream100,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontFamily: "var(--font-inter)",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      padding: "10px 20px",
+                      borderRadius: 8,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Plus size={16} />
+                    New Article
+                  </Link>
+                )}
               </div>
             ) : (
               articles.map((article) => {
@@ -485,14 +503,16 @@ export default function ArticlesListPage() {
                     </span>
 
                     <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "flex-end" }}>
-                      <Link
-                        href={`/admin/bytesphere/articles/${article.id}/edit`}
-                        title="Edit article"
-                        className="article-action"
-                        style={{ ...actionButtonStyle, textDecoration: "none" }}
-                      >
-                        <Pencil size={15} color={C.forest600} />
-                      </Link>
+                      {can("edit_bs_articles") && (
+                        <Link
+                          href={`/admin/bytesphere/articles/${article.id}/edit`}
+                          title="Edit article"
+                          className="article-action"
+                          style={{ ...actionButtonStyle, textDecoration: "none" }}
+                        >
+                          <Pencil size={15} color={C.forest600} />
+                        </Link>
+                      )}
                       <button
                         type="button"
                         className="article-action"
@@ -507,20 +527,22 @@ export default function ArticlesListPage() {
                           <Copy size={15} color={C.slate500} />
                         )}
                       </button>
-                      <button
-                        type="button"
-                        className="article-action"
-                        style={actionButtonStyle}
-                        title="Delete article"
-                        disabled={deletingId === article.id}
-                        onClick={() => handleDelete(article)}
-                      >
-                        {deletingId === article.id ? (
-                          <Loader2 size={15} color={C.slate400} style={{ animation: "spin 0.8s linear infinite" }} />
-                        ) : (
-                          <Trash2 size={15} color="#DC2626" />
-                        )}
-                      </button>
+                      {can("delete_bs_articles") && (
+                        <button
+                          type="button"
+                          className="article-action"
+                          style={actionButtonStyle}
+                          title="Delete article"
+                          disabled={deletingId === article.id}
+                          onClick={() => handleDelete(article)}
+                        >
+                          {deletingId === article.id ? (
+                            <Loader2 size={15} color={C.slate400} style={{ animation: "spin 0.8s linear infinite" }} />
+                          ) : (
+                            <Trash2 size={15} color="#DC2626" />
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

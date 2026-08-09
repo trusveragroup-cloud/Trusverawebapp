@@ -6,6 +6,8 @@ import {
   AlertCircle, Copy, FileText, Loader2, Pencil, Plus, Search, Trash2,
 } from "lucide-react"
 import { C } from "@/lib/colors"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
 import type { BsAuthor, BsBlogWithRelations, BsCategory, BsContentStatus } from "@/lib/bytesphere/types"
 
 const gridColumns = "minmax(220px,2fr) 140px 180px 130px 130px 120px"
@@ -41,6 +43,7 @@ const actionButtonStyle: React.CSSProperties = {
 }
 
 export default function BlogsListPage() {
+  const { can, loading: adminLoading } = useAdmin()
   const [blogs, setBlogs] = useState<BsBlogWithRelations[]>([])
   const [categories, setCategories] = useState<BsCategory[]>([])
   const [authors, setAuthors] = useState<BsAuthor[]>([])
@@ -177,6 +180,17 @@ export default function BlogsListPage() {
     }
   }
 
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("view_bs_blogs")) return <AccessDenied />
+
   return (
     <div style={{ padding: 32 }}>
       <style>{`
@@ -195,26 +209,28 @@ export default function BlogsListPage() {
           </div>
         </div>
 
-        <Link
-          href="/admin/bytesphere/blogs/new"
-          style={{
-            background: C.forest600,
-            color: C.cream100,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            fontFamily: "var(--font-inter)",
-            fontSize: 13,
-            fontWeight: 700,
-            padding: "10px 20px",
-            borderRadius: 8,
-            textDecoration: "none",
-            flexShrink: 0,
-          }}
-        >
-          <Plus size={16} />
-          New Blog Post
-        </Link>
+        {can("create_bs_blogs") && (
+          <Link
+            href="/admin/bytesphere/blogs/new"
+            style={{
+              background: C.forest600,
+              color: C.cream100,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: "var(--font-inter)",
+              fontSize: 13,
+              fontWeight: 700,
+              padding: "10px 20px",
+              borderRadius: 8,
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            <Plus size={16} />
+            New Blog Post
+          </Link>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
@@ -387,25 +403,27 @@ export default function BlogsListPage() {
                 <p style={{ fontFamily: "var(--font-inter)", fontSize: 16, color: C.slate500, marginBottom: 16 }}>
                   No blog posts match your filters.
                 </p>
-                <Link
-                  href="/admin/bytesphere/blogs/new"
-                  style={{
-                    background: C.forest600,
-                    color: C.cream100,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    fontFamily: "var(--font-inter)",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    padding: "10px 20px",
-                    borderRadius: 8,
-                    textDecoration: "none",
-                  }}
-                >
-                  <Plus size={16} />
-                  New Blog Post
-                </Link>
+                {can("create_bs_blogs") && (
+                  <Link
+                    href="/admin/bytesphere/blogs/new"
+                    style={{
+                      background: C.forest600,
+                      color: C.cream100,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontFamily: "var(--font-inter)",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      padding: "10px 20px",
+                      borderRadius: 8,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Plus size={16} />
+                    New Blog Post
+                  </Link>
+                )}
               </div>
             ) : (
               blogs.map((blog) => {
@@ -493,14 +511,16 @@ export default function BlogsListPage() {
                     </span>
 
                     <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "flex-end" }}>
-                      <Link
-                        href={`/admin/bytesphere/blogs/${blog.id}/edit`}
-                        title="Edit blog post"
-                        className="blog-action"
-                        style={{ ...actionButtonStyle, textDecoration: "none" }}
-                      >
-                        <Pencil size={15} color={C.forest600} />
-                      </Link>
+                      {can("edit_bs_blogs") && (
+                        <Link
+                          href={`/admin/bytesphere/blogs/${blog.id}/edit`}
+                          title="Edit blog post"
+                          className="blog-action"
+                          style={{ ...actionButtonStyle, textDecoration: "none" }}
+                        >
+                          <Pencil size={15} color={C.forest600} />
+                        </Link>
+                      )}
                       <button
                         type="button"
                         className="blog-action"
@@ -515,20 +535,22 @@ export default function BlogsListPage() {
                           <Copy size={15} color={C.slate500} />
                         )}
                       </button>
-                      <button
-                        type="button"
-                        className="blog-action"
-                        style={actionButtonStyle}
-                        title="Delete blog post"
-                        disabled={deletingId === blog.id}
-                        onClick={() => handleDelete(blog)}
-                      >
-                        {deletingId === blog.id ? (
-                          <Loader2 size={15} color={C.slate400} style={{ animation: "spin 0.8s linear infinite" }} />
-                        ) : (
-                          <Trash2 size={15} color="#DC2626" />
-                        )}
-                      </button>
+                      {can("delete_bs_blogs") && (
+                        <button
+                          type="button"
+                          className="blog-action"
+                          style={actionButtonStyle}
+                          title="Delete blog post"
+                          disabled={deletingId === blog.id}
+                          onClick={() => handleDelete(blog)}
+                        >
+                          {deletingId === blog.id ? (
+                            <Loader2 size={15} color={C.slate400} style={{ animation: "spin 0.8s linear infinite" }} />
+                          ) : (
+                            <Trash2 size={15} color="#DC2626" />
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

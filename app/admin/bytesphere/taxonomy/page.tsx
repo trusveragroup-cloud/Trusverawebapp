@@ -8,6 +8,8 @@ import {
 
 import { C } from "@/lib/colors"
 import { slugify } from "@/lib/bytesphere/content-helpers"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
 
 type TaxonomyKind = "categories" | "topics"
 
@@ -298,6 +300,7 @@ function TabButton({ active, count, label, onClick }: { active: boolean; count: 
 }
 
 function TaxonomyList({ state }: { state: TaxonomyState }) {
+  const { can } = useAdmin()
   const { kind, label, urlPrefix, items, loading, fetchError, reordering, setDragIndex, handleDrop, fetchItems, openEditDialog, setDeleteTarget, setDeleteError } = state
 
   if (loading) {
@@ -332,18 +335,20 @@ function TaxonomyList({ state }: { state: TaxonomyState }) {
         <p style={{ fontFamily: "var(--font-inter)", fontSize: 16, color: C.slate500, marginBottom: 16 }}>
           No {kind} yet.
         </p>
-        <button
-          type="button"
-          onClick={state.openCreateDialog}
-          style={{
-            background: C.forest600, color: C.cream100, display: "inline-flex", alignItems: "center", gap: 8,
-            fontFamily: "var(--font-inter)", fontSize: 13, fontWeight: 700, padding: "10px 20px", borderRadius: 8,
-            border: "none", cursor: "pointer",
-          }}
-        >
-          <Plus size={16} />
-          New {label}
-        </button>
+        {can("manage_bs_taxonomy") && (
+          <button
+            type="button"
+            onClick={state.openCreateDialog}
+            style={{
+              background: C.forest600, color: C.cream100, display: "inline-flex", alignItems: "center", gap: 8,
+              fontFamily: "var(--font-inter)", fontSize: 13, fontWeight: 700, padding: "10px 20px", borderRadius: 8,
+              border: "none", cursor: "pointer",
+            }}
+          >
+            <Plus size={16} />
+            New {label}
+          </button>
+        )}
       </div>
     )
   }
@@ -353,7 +358,7 @@ function TaxonomyList({ state }: { state: TaxonomyState }) {
       {items.map((item, index) => (
         <div
           key={item.id}
-          draggable
+          draggable={can("manage_bs_taxonomy")}
           onDragStart={() => setDragIndex(index)}
           onDragOver={(e) => e.preventDefault()}
           onDrop={() => handleDrop(index)}
@@ -392,36 +397,38 @@ function TaxonomyList({ state }: { state: TaxonomyState }) {
             {item.itemCount} item{item.itemCount === 1 ? "" : "s"}
           </div>
 
-          <div style={{ flexShrink: 0, display: "flex", gap: 4 }}>
-            <button
-              type="button"
-              className="taxonomy-icon-btn"
-              title="Edit"
-              onClick={() => openEditDialog(item)}
-              style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, border: "none", background: "none", cursor: "pointer" }}
-            >
-              <Pencil size={15} color={C.forest600} />
-            </button>
-            <button
-              type="button"
-              className="taxonomy-icon-btn"
-              title={item.itemCount > 0 ? `In use by ${item.itemCount} item${item.itemCount === 1 ? "" : "s"} — cannot delete` : "Delete"}
-              disabled={item.itemCount > 0}
-              onClick={() => { setDeleteTarget(item); setDeleteError("") }}
-              style={{
-                width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6,
-                border: "none", background: "none",
-                cursor: item.itemCount > 0 ? "not-allowed" : "pointer",
-              }}
-            >
-              <Trash2
-                size={15}
-                color={C.red400}
-                className={item.itemCount > 0 ? undefined : "taxonomy-delete-icon"}
-                style={{ opacity: item.itemCount > 0 ? 0.3 : 0.6, transition: "opacity .15s" }}
-              />
-            </button>
-          </div>
+          {can("manage_bs_taxonomy") && (
+            <div style={{ flexShrink: 0, display: "flex", gap: 4 }}>
+              <button
+                type="button"
+                className="taxonomy-icon-btn"
+                title="Edit"
+                onClick={() => openEditDialog(item)}
+                style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, border: "none", background: "none", cursor: "pointer" }}
+              >
+                <Pencil size={15} color={C.forest600} />
+              </button>
+              <button
+                type="button"
+                className="taxonomy-icon-btn"
+                title={item.itemCount > 0 ? `In use by ${item.itemCount} item${item.itemCount === 1 ? "" : "s"} — cannot delete` : "Delete"}
+                disabled={item.itemCount > 0}
+                onClick={() => { setDeleteTarget(item); setDeleteError("") }}
+                style={{
+                  width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6,
+                  border: "none", background: "none",
+                  cursor: item.itemCount > 0 ? "not-allowed" : "pointer",
+                }}
+              >
+                <Trash2
+                  size={15}
+                  color={C.red400}
+                  className={item.itemCount > 0 ? undefined : "taxonomy-delete-icon"}
+                  style={{ opacity: item.itemCount > 0 ? 0.3 : 0.6, transition: "opacity .15s" }}
+                />
+              </button>
+            </div>
+          )}
         </div>
       ))}
       {reordering && (
@@ -568,10 +575,22 @@ function TaxonomyDialogs({ state }: { state: TaxonomyState }) {
 }
 
 export default function TaxonomyPage() {
+  const { can, loading: adminLoading } = useAdmin()
   const [activeTab, setActiveTab] = useState<TaxonomyKind>("categories")
   const categoriesState = useTaxonomyKind("categories")
   const topicsState = useTaxonomyKind("topics")
   const active = activeTab === "categories" ? categoriesState : topicsState
+
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("view_bs_taxonomy")) return <AccessDenied />
 
   return (
     <div style={{ padding: 32 }}>
@@ -592,18 +611,20 @@ export default function TaxonomyPage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={active.openCreateDialog}
-          style={{
-            background: C.forest600, color: C.cream100, display: "inline-flex", alignItems: "center", gap: 8,
-            fontFamily: "var(--font-inter)", fontSize: 13, fontWeight: 700, padding: "10px 20px", borderRadius: 8,
-            border: "none", cursor: "pointer", flexShrink: 0,
-          }}
-        >
-          <Plus size={16} />
-          New {active.label}
-        </button>
+        {can("manage_bs_taxonomy") && (
+          <button
+            type="button"
+            onClick={active.openCreateDialog}
+            style={{
+              background: C.forest600, color: C.cream100, display: "inline-flex", alignItems: "center", gap: 8,
+              fontFamily: "var(--font-inter)", fontSize: 13, fontWeight: 700, padding: "10px 20px", borderRadius: 8,
+              border: "none", cursor: "pointer", flexShrink: 0,
+            }}
+          >
+            <Plus size={16} />
+            New {active.label}
+          </button>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>

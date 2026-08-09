@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { AlertCircle, Eye, Inbox, Loader2, Search, Send, Trash2, X } from "lucide-react"
 import { C } from "@/lib/colors"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
 
 type ContactStatus = "new" | "read" | "replied" | "closed"
 
@@ -100,6 +102,8 @@ function ContactPanel({
       document.body.style.overflow = previousOverflow
     }
   }, [])
+
+  const { can } = useAdmin()
 
   const handleReply = () => {
     onStatusChange("replied")
@@ -201,17 +205,21 @@ function ContactPanel({
             <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMuted, fontFamily: "var(--font-inter)", marginBottom: 6 }}>
               Status
             </div>
-            <select
-              value={contact.status}
-              disabled={statusSaving}
-              onChange={(e) => onStatusChange(e.target.value as ContactStatus)}
-              style={{ ...dropdownStyle, width: "100%" }}
-            >
-              <option value="new">New</option>
-              <option value="read">Read</option>
-              <option value="replied">Replied</option>
-              <option value="closed">Closed</option>
-            </select>
+            {can("edit_bs_contacts") ? (
+              <select
+                value={contact.status}
+                disabled={statusSaving}
+                onChange={(e) => onStatusChange(e.target.value as ContactStatus)}
+                style={{ ...dropdownStyle, width: "100%" }}
+              >
+                <option value="new">New</option>
+                <option value="read">Read</option>
+                <option value="replied">Replied</option>
+                <option value="closed">Closed</option>
+              </select>
+            ) : (
+              <StatusPill status={contact.status} />
+            )}
           </div>
 
           <a
@@ -242,6 +250,7 @@ function ContactPanel({
 }
 
 export default function ContactsPage() {
+  const { can, loading: adminLoading } = useAdmin()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState("")
@@ -350,6 +359,17 @@ export default function ContactsPage() {
       setDeletingId(null)
     }
   }
+
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("view_bs_contacts")) return <AccessDenied />
 
   return (
     <div style={{ padding: 32 }}>
@@ -567,23 +587,25 @@ export default function ContactsPage() {
                       >
                         <Eye size={15} color={C.forest600} />
                       </button>
-                      <button
-                        type="button"
-                        className="contact-action"
-                        title="Delete permanently"
-                        disabled={deletingId === contact.id}
-                        onClick={(e) => handleDelete(contact, e)}
-                        style={{
-                          width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6,
-                          border: "none", background: "none", cursor: deletingId === contact.id ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {deletingId === contact.id ? (
-                          <Loader2 size={15} color={C.textMuted} style={{ animation: "spin 0.8s linear infinite" }} />
-                        ) : (
-                          <Trash2 size={15} color={C.red400} className="contact-delete-icon" style={{ opacity: 0.6, transition: "opacity .15s" }} />
-                        )}
-                      </button>
+                      {can("edit_bs_contacts") && (
+                        <button
+                          type="button"
+                          className="contact-action"
+                          title="Delete permanently"
+                          disabled={deletingId === contact.id}
+                          onClick={(e) => handleDelete(contact, e)}
+                          style={{
+                            width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6,
+                            border: "none", background: "none", cursor: deletingId === contact.id ? "not-allowed" : "pointer",
+                          }}
+                        >
+                          {deletingId === contact.id ? (
+                            <Loader2 size={15} color={C.textMuted} style={{ animation: "spin 0.8s linear infinite" }} />
+                          ) : (
+                            <Trash2 size={15} color={C.red400} className="contact-delete-icon" style={{ opacity: 0.6, transition: "opacity .15s" }} />
+                          )}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -8,6 +8,8 @@ import {
 } from "lucide-react"
 import { Area, AreaChart, ResponsiveContainer, XAxis } from "recharts"
 import { C } from "@/lib/colors"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
 
 type StatBlock = { total: number; published: number; drafts: number; archived: number }
 type SubscriberStats = { total: number; active: number; unsubscribed: number; thisMonth: number }
@@ -145,6 +147,7 @@ function DefRow({ label, value, last }: { label: string; value: number; last?: b
 
 export default function ByteSphereDashboardPage() {
   const router = useRouter()
+  const { can, loading: adminLoading } = useAdmin()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -179,6 +182,17 @@ export default function ByteSphereDashboardPage() {
   )
 
   const showFullSkeleton = loading && data === null
+
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("view_bs_dashboard")) return <AccessDenied />
 
   return (
     <div style={{ padding: 32 }}>

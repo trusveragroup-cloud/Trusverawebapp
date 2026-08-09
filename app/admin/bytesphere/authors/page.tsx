@@ -5,6 +5,8 @@ import { AlertCircle, Loader2, Pencil, Plus, Trash2, UserSquare2 } from "lucide-
 
 import { C } from "@/lib/colors"
 import { ImageUpload } from "@/components/admin/ImageUpload"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
 import type { BsAuthor } from "@/lib/bytesphere/types"
 
 type AuthorRow = BsAuthor & { articleCount: number; blogCount: number }
@@ -178,6 +180,7 @@ function AuthorAvatar({ author, size = 52 }: { author: AuthorRow; size?: number 
 }
 
 export default function AuthorsPage() {
+  const { can, loading: adminLoading } = useAdmin()
   const [authors, setAuthors] = useState<AuthorRow[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState("")
@@ -340,6 +343,17 @@ export default function AuthorsPage() {
     }
   }
 
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("view_bs_authors")) return <AccessDenied />
+
   return (
     <div style={{ padding: 32 }}>
       <style>{`
@@ -361,28 +375,30 @@ export default function AuthorsPage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={openCreateDialog}
-          style={{
-            background: C.forest600,
-            color: C.cream100,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            fontFamily: "var(--font-inter)",
-            fontSize: 13,
-            fontWeight: 700,
-            padding: "10px 20px",
-            borderRadius: 8,
-            border: "none",
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
-        >
-          <Plus size={16} />
-          New Author
-        </button>
+        {can("manage_bs_authors") && (
+          <button
+            type="button"
+            onClick={openCreateDialog}
+            style={{
+              background: C.forest600,
+              color: C.cream100,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: "var(--font-inter)",
+              fontSize: 13,
+              fontWeight: 700,
+              padding: "10px 20px",
+              borderRadius: 8,
+              border: "none",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <Plus size={16} />
+            New Author
+          </button>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
@@ -441,27 +457,29 @@ export default function AuthorsPage() {
           <p style={{ fontFamily: "var(--font-inter)", fontSize: 16, color: C.slate500, marginBottom: 16 }}>
             No authors yet.
           </p>
-          <button
-            type="button"
-            onClick={openCreateDialog}
-            style={{
-              background: C.forest600,
-              color: C.cream100,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              fontFamily: "var(--font-inter)",
-              fontSize: 13,
-              fontWeight: 700,
-              padding: "10px 20px",
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            <Plus size={16} />
-            New Author
-          </button>
+          {can("manage_bs_authors") && (
+            <button
+              type="button"
+              onClick={openCreateDialog}
+              style={{
+                background: C.forest600,
+                color: C.cream100,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                fontFamily: "var(--font-inter)",
+                fontSize: 13,
+                fontWeight: 700,
+                padding: "10px 20px",
+                borderRadius: 8,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              <Plus size={16} />
+              New Author
+            </button>
+          )}
         </div>
       )}
 
@@ -553,41 +571,43 @@ export default function AuthorsPage() {
                 <span style={{ fontWeight: 600, color: C.textDark }}>{author.blogCount}</span> blog{author.blogCount === 1 ? "" : "s"}
               </div>
 
-              <div
-                style={{
-                  marginTop: "auto",
-                  paddingTop: 14,
-                  borderTop: `1px solid ${C.borderLight}`,
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 4,
-                }}
-              >
-                <button
-                  type="button"
-                  className="author-icon-btn"
-                  title="Edit"
-                  onClick={() => openEditDialog(author)}
+              {can("manage_bs_authors") && (
+                <div
                   style={{
-                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                    borderRadius: 6, border: "none", background: "none", cursor: "pointer",
+                    marginTop: "auto",
+                    paddingTop: 14,
+                    borderTop: `1px solid ${C.borderLight}`,
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: 4,
                   }}
                 >
-                  <Pencil size={15} color={C.forest600} />
-                </button>
-                <button
-                  type="button"
-                  className="author-icon-btn"
-                  title="Delete"
-                  onClick={() => { setDeleteTarget(author); setDeleteError("") }}
-                  style={{
-                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                    borderRadius: 6, border: "none", background: "none", cursor: "pointer",
-                  }}
-                >
-                  <Trash2 size={15} color={C.red400} className="author-delete-icon" style={{ opacity: 0.55, transition: "opacity .15s" }} />
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    className="author-icon-btn"
+                    title="Edit"
+                    onClick={() => openEditDialog(author)}
+                    style={{
+                      width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                      borderRadius: 6, border: "none", background: "none", cursor: "pointer",
+                    }}
+                  >
+                    <Pencil size={15} color={C.forest600} />
+                  </button>
+                  <button
+                    type="button"
+                    className="author-icon-btn"
+                    title="Delete"
+                    onClick={() => { setDeleteTarget(author); setDeleteError("") }}
+                    style={{
+                      width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                      borderRadius: 6, border: "none", background: "none", cursor: "pointer",
+                    }}
+                  >
+                    <Trash2 size={15} color={C.red400} className="author-delete-icon" style={{ opacity: 0.55, transition: "opacity .15s" }} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

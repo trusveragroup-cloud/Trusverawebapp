@@ -6,9 +6,13 @@ import { AlertCircle, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ArticleForm } from "@/components/admin/bytesphere/ArticleForm"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
+import { C } from "@/lib/colors"
 import type { BsArticleWithRelations } from "@/lib/bytesphere/types"
 
 export default function EditArticlePage() {
+  const { can, loading: adminLoading } = useAdmin()
   const params = useParams()
   const id = params.id as string
 
@@ -37,6 +41,17 @@ export default function EditArticlePage() {
   useEffect(() => {
     fetchArticle()
   }, [fetchArticle])
+
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("edit_bs_articles")) return <AccessDenied />
 
   if (loading) {
     return (

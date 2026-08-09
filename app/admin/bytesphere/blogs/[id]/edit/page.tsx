@@ -6,9 +6,13 @@ import { AlertCircle, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { BlogForm } from "@/components/admin/bytesphere/BlogForm"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
+import { C } from "@/lib/colors"
 import type { BsBlogWithRelations } from "@/lib/bytesphere/types"
 
 export default function EditBlogPage() {
+  const { can, loading: adminLoading } = useAdmin()
   const params = useParams()
   const id = params.id as string
 
@@ -37,6 +41,17 @@ export default function EditBlogPage() {
   useEffect(() => {
     fetchBlog()
   }, [fetchBlog])
+
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("edit_bs_blogs")) return <AccessDenied />
 
   if (loading) {
     return (

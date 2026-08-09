@@ -5,6 +5,8 @@ import {
   AlertCircle, Download, Loader2, Mail, Search, Trash2, UserMinus, UserPlus,
 } from "lucide-react"
 import { C } from "@/lib/colors"
+import { useAdmin } from "@/lib/admin-context"
+import AccessDenied from "@/components/admin/AccessDenied"
 
 type Subscriber = {
   id: string
@@ -33,6 +35,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function SubscribersPage() {
+  const { can, loading: adminLoading } = useAdmin()
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState("")
@@ -140,6 +143,17 @@ export default function SubscribersPage() {
       setDeletingId(null)
     }
   }
+
+  if (adminLoading) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{ color: C.textMuted, fontFamily: "var(--font-inter)", fontSize: 14 }}>
+          Loading...
+        </div>
+      </div>
+    )
+  }
+  if (!can("view_bs_subscribers")) return <AccessDenied />
 
   return (
     <div style={{ padding: 32 }}>
@@ -376,49 +390,53 @@ export default function SubscribersPage() {
                   </td>
                   <td style={{ padding: "0 20px" }}>
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
-                      <button
-                        type="button"
-                        className="subscriber-action"
-                        title={sub.active ? "Unsubscribe" : "Reactivate"}
-                        disabled={togglingId === sub.id}
-                        onClick={() => handleToggle(sub)}
-                        style={{
-                          width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                          borderRadius: 6, border: "none", background: "none",
-                          cursor: togglingId === sub.id ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {togglingId === sub.id ? (
-                          <Loader2 size={15} color={C.textMuted} style={{ animation: "spin 0.8s linear infinite" }} />
-                        ) : sub.active ? (
-                          <UserMinus size={15} color={C.forest600} />
-                        ) : (
-                          <UserPlus size={15} color={C.forest600} />
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className="subscriber-action"
-                        title="Delete permanently"
-                        disabled={deletingId === sub.id}
-                        onClick={() => handleDelete(sub)}
-                        style={{
-                          width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                          borderRadius: 6, border: "none", background: "none",
-                          cursor: deletingId === sub.id ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {deletingId === sub.id ? (
-                          <Loader2 size={15} color={C.textMuted} style={{ animation: "spin 0.8s linear infinite" }} />
-                        ) : (
-                          <Trash2
-                            size={15}
-                            color={C.red400}
-                            className="subscriber-delete-icon"
-                            style={{ opacity: 0.6, transition: "opacity .15s" }}
-                          />
-                        )}
-                      </button>
+                      {can("manage_bs_subscribers") && (
+                        <>
+                          <button
+                            type="button"
+                            className="subscriber-action"
+                            title={sub.active ? "Unsubscribe" : "Reactivate"}
+                            disabled={togglingId === sub.id}
+                            onClick={() => handleToggle(sub)}
+                            style={{
+                              width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                              borderRadius: 6, border: "none", background: "none",
+                              cursor: togglingId === sub.id ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            {togglingId === sub.id ? (
+                              <Loader2 size={15} color={C.textMuted} style={{ animation: "spin 0.8s linear infinite" }} />
+                            ) : sub.active ? (
+                              <UserMinus size={15} color={C.forest600} />
+                            ) : (
+                              <UserPlus size={15} color={C.forest600} />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            className="subscriber-action"
+                            title="Delete permanently"
+                            disabled={deletingId === sub.id}
+                            onClick={() => handleDelete(sub)}
+                            style={{
+                              width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                              borderRadius: 6, border: "none", background: "none",
+                              cursor: deletingId === sub.id ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            {deletingId === sub.id ? (
+                              <Loader2 size={15} color={C.textMuted} style={{ animation: "spin 0.8s linear infinite" }} />
+                            ) : (
+                              <Trash2
+                                size={15}
+                                color={C.red400}
+                                className="subscriber-delete-icon"
+                                style={{ opacity: 0.6, transition: "opacity .15s" }}
+                              />
+                            )}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
