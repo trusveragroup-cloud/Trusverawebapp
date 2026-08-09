@@ -1,35 +1,18 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdmin } from "@/lib/supabase/requireAdmin"
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated." }, { status: 401 })
-    }
-
-    const adminSupabase = createAdminClient()
-    const { data: adminUser, error } = await adminSupabase
-      .from("admin_users")
-      .select("id, full_name, email, role, is_active")
-      .eq("id", user.id)
-      .single()
-
-    if (error || !adminUser || !adminUser.is_active) {
-      return NextResponse.json({ error: "Access denied." }, { status: 403 })
-    }
+    const auth = await requireAdmin()
+    if ("error" in auth) return auth.error
 
     return NextResponse.json({
       user: {
-        id: adminUser.id,
-        fullName: adminUser.full_name,
-        email: adminUser.email,
-        role: adminUser.role,
+        id: auth.user.id,
+        fullName: auth.user.fullName,
+        email: auth.user.email,
+        role: auth.user.role,
+        permissions: auth.user.permissions,
       },
     })
   } catch (err) {
