@@ -129,6 +129,7 @@ function AdminLoginForm() {
   const [authError, setAuthError] = useState("");
 
   const urlError = searchParams.get("error");
+  const urlMessage = searchParams.get("message");
 
   useEffect(() => {
     if (urlError === "auth_callback_failed") {
@@ -313,6 +314,24 @@ function AdminLoginForm() {
           >
             Forgot password?
           </a>
+
+          {urlMessage === "password_updated" && (
+            <div
+              style={{
+                background: "rgba(22,107,74,0.08)",
+                border: "1px solid rgba(22,107,74,0.25)",
+                borderRadius: "6px",
+                padding: "10px 14px",
+                marginTop: "16px",
+                marginBottom: "16px",
+                color: C.forest600,
+                fontFamily: "var(--font-inter)",
+                fontSize: "13px",
+              }}
+            >
+              Password updated successfully. Please sign in with your new password.
+            </div>
+          )}
 
           {authError && (
             <div

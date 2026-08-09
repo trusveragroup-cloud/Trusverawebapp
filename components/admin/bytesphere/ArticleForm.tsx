@@ -5,18 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { AlertCircle, ChevronLeft, Loader2, Save, Send, Sparkles, Undo2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { C } from "@/lib/colors"
 import { RichTextEditor } from "@/components/admin/RichTextEditor"
 import { ImageUpload } from "@/components/admin/ImageUpload"
 import { slugify, estimateReadTime } from "@/lib/bytesphere/content-helpers"
@@ -28,6 +17,138 @@ type ArticleFormProps = {
 }
 
 type FormErrors = Partial<Record<"title" | "slug" | "excerpt" | "content" | "categoryId" | "authorId", string>>
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: 13,
+  fontWeight: 600,
+  color: C.textDark,
+  marginBottom: 6,
+  fontFamily: "var(--font-inter)",
+}
+
+const helperStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: C.textMuted,
+  marginTop: 6,
+  fontFamily: "var(--font-inter)",
+}
+
+const errorTextStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: C.red400,
+  marginTop: 6,
+  fontFamily: "var(--font-inter)",
+}
+
+function inputStyle(hasError?: boolean): React.CSSProperties {
+  return {
+    width: "100%",
+    padding: "10px 12px",
+    fontSize: 14,
+    border: `1px solid ${hasError ? C.red400 : C.borderLight}`,
+    borderRadius: 8,
+    background: C.white,
+    color: C.textDark,
+    outline: "none",
+    boxSizing: "border-box",
+    fontFamily: "var(--font-inter)",
+    transition: "border-color .15s, box-shadow .15s",
+  }
+}
+
+function selectStyle(hasError?: boolean): React.CSSProperties {
+  return {
+    ...inputStyle(hasError),
+    paddingRight: 36,
+    appearance: "none",
+    WebkitAppearance: "none",
+    MozAppearance: "none",
+    cursor: "pointer",
+    backgroundImage:
+      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 10px center",
+    backgroundSize: "16px",
+  }
+}
+
+function handleFieldFocus(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  e.currentTarget.style.borderColor = "#4F772D"
+  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(79,119,45,0.12)"
+}
+
+function handleFieldBlur(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, hasError?: boolean) {
+  e.currentTarget.style.borderColor = hasError ? C.red400 : C.borderLight
+  e.currentTarget.style.boxShadow = "none"
+}
+
+const cardStyle: React.CSSProperties = {
+  background: C.white,
+  border: `1px solid ${C.borderLight}`,
+  borderRadius: 10,
+  padding: 24,
+}
+
+const sectionHeaderStyle: React.CSSProperties = {
+  fontSize: 11,
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+  color: C.textMuted,
+  marginBottom: 16,
+  paddingBottom: 10,
+  borderBottom: `1px solid ${C.borderLight}`,
+  fontFamily: "var(--font-inter)",
+  fontWeight: 600,
+}
+
+const buttonBase: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  fontFamily: "var(--font-inter)",
+  fontSize: 13,
+  fontWeight: 700,
+  padding: "10px 20px",
+  borderRadius: 8,
+  border: "none",
+  outline: "none",
+}
+
+function Toggle({ checked, onChange, id }: { checked: boolean; onChange: (v: boolean) => void; id?: string }) {
+  return (
+    <div
+      id={id}
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      style={{
+        width: 40,
+        height: 22,
+        borderRadius: 11,
+        background: checked ? C.forest600 : C.slate200,
+        position: "relative",
+        cursor: "pointer",
+        transition: "background 0.2s",
+        flexShrink: 0,
+      }}
+    >
+      <div
+        style={{
+          width: 16,
+          height: 16,
+          background: "white",
+          borderRadius: "50%",
+          position: "absolute",
+          top: 3,
+          left: checked ? 21 : 3,
+          transition: "left 0.2s",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+        }}
+      />
+    </div>
+  )
+}
 
 export function ArticleForm({ mode, initialData }: ArticleFormProps) {
   const router = useRouter()
@@ -93,7 +214,6 @@ export function ArticleForm({ mode, initialData }: ArticleFormProps) {
     fetchOptions()
   }, [fetchOptions])
 
-  // Mark the form dirty once the user changes anything after initial load.
   useEffect(() => {
     if (initialLoad.current) {
       initialLoad.current = false
@@ -125,7 +245,6 @@ export function ArticleForm({ mode, initialData }: ArticleFormProps) {
     setSlug(slugify(value))
   }
 
-  // Live slug uniqueness check, debounced.
   useEffect(() => {
     if (!slug) {
       setSlugStatus("idle")
@@ -231,260 +350,384 @@ export function ArticleForm({ mode, initialData }: ArticleFormProps) {
   }
 
   return (
-    <div className="pb-24">
-      <div className="mb-6">
+    <div style={{ padding: "32px 32px 100px" }}>
+      <style>{`
+        @media (max-width: 1100px) {
+          .af-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      <div style={{ marginBottom: 24 }}>
         <Link
           href="/admin/bytesphere/articles"
           onClick={handleBackClick}
-          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 13,
+            color: C.textMuted,
+            textDecoration: "none",
+            fontFamily: "var(--font-inter)",
+            marginBottom: 12,
+          }}
         >
-          <ChevronLeft className="size-4" />
+          <ChevronLeft size={16} />
           Articles
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold text-text">
+        <h1 style={{ fontFamily: "var(--font-dm-serif)", fontSize: 26, color: C.forest800, margin: 0, marginTop: 4 }}>
           {mode === "create" ? "New Article" : "Edit Article"}
         </h1>
       </div>
 
       {optionsError && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+        <div
+          style={{
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderRadius: 8,
+            border: `1px solid ${C.red400}`,
+            background: "rgba(226,75,74,0.08)",
+            padding: "12px 16px",
+            fontSize: 13,
+            color: C.red400,
+            fontFamily: "var(--font-inter)",
+          }}
+        >
           {optionsError}
-          <Button variant="outline" size="sm" onClick={fetchOptions}>
+          <button
+            type="button"
+            onClick={fetchOptions}
+            style={{
+              background: "none",
+              border: `1px solid ${C.red400}`,
+              borderRadius: 6,
+              padding: "6px 14px",
+              fontSize: 12,
+              fontWeight: 600,
+              color: C.red400,
+              cursor: "pointer",
+            }}
+          >
             Retry
-          </Button>
+          </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
-          <div className="space-y-4 rounded-xl border border-border bg-card p-6">
+      <div className="af-grid" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 32 }}>
+        <div>
+          <div style={{ ...cardStyle, marginBottom: 24, display: "flex", flexDirection: "column", gap: 24 }}>
             <div>
-              <Label htmlFor="article-title">Title</Label>
-              <Input
+              <label style={labelStyle} htmlFor="article-title">Title</label>
+              <input
                 id="article-title"
-                className="mt-1.5"
+                style={inputStyle(!!errors.title)}
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
+                onFocus={handleFieldFocus}
+                onBlur={(e) => handleFieldBlur(e, !!errors.title)}
                 placeholder="Enter the article title..."
-                aria-invalid={!!errors.title}
               />
-              {errors.title && <p className="mt-1 text-xs text-danger">{errors.title}</p>}
+              {errors.title && <div style={errorTextStyle}>{errors.title}</div>}
             </div>
 
             <div>
-              <Label htmlFor="article-slug">Slug</Label>
-              <Input
+              <label style={labelStyle} htmlFor="article-slug">Slug</label>
+              <input
                 id="article-slug"
-                className="mt-1.5"
+                style={inputStyle(!!errors.slug)}
                 value={slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
+                onFocus={handleFieldFocus}
+                onBlur={(e) => handleFieldBlur(e, !!errors.slug)}
                 placeholder="article-slug"
-                aria-invalid={!!errors.slug}
               />
-              <div className="mt-1 flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">/articles/{slug || "..."}</span>
-                {slugStatus === "checking" && <span className="text-muted-foreground">Checking...</span>}
-                {slugStatus === "available" && <span className="text-success">Available</span>}
-                {slugStatus === "taken" && <span className="text-danger">Already in use</span>}
+              <div style={{ ...helperStyle, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>/articles/{slug || "..."}</span>
+                {slugStatus === "checking" && <span>Checking...</span>}
+                {slugStatus === "available" && <span style={{ color: C.forest600 }}>Available</span>}
+                {slugStatus === "taken" && <span style={{ color: C.red400 }}>Already in use</span>}
               </div>
-              {errors.slug && <p className="mt-1 text-xs text-danger">{errors.slug}</p>}
+              {errors.slug && <div style={errorTextStyle}>{errors.slug}</div>}
             </div>
 
             <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="article-excerpt">Excerpt</Label>
-                <span className="text-xs text-muted-foreground">{excerpt.length} characters</span>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }} htmlFor="article-excerpt">Excerpt</label>
+                <span style={{ fontSize: 12, color: C.textMuted, fontFamily: "var(--font-inter)" }}>
+                  {excerpt.length} characters
+                </span>
               </div>
-              <Textarea
+              <textarea
                 id="article-excerpt"
-                className="mt-1.5 min-h-20"
+                style={{ ...inputStyle(!!errors.excerpt), minHeight: 80, resize: "vertical" }}
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
+                onFocus={handleFieldFocus}
+                onBlur={(e) => handleFieldBlur(e, !!errors.excerpt)}
                 placeholder="A short summary shown on listing pages..."
-                aria-invalid={!!errors.excerpt}
               />
-              {errors.excerpt && <p className="mt-1 text-xs text-danger">{errors.excerpt}</p>}
+              {errors.excerpt && <div style={errorTextStyle}>{errors.excerpt}</div>}
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="border-b border-border px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          <div style={{ background: C.white, border: `1px solid ${C.borderLight}`, borderRadius: 10, overflow: "hidden", marginBottom: 24 }}>
+            <div style={{ ...sectionHeaderStyle, margin: 0, padding: "16px 24px", borderBottom: `1px solid ${C.borderLight}` }}>
               Content
             </div>
             <RichTextEditor value={content} onChange={setContent} minHeight={420} />
           </div>
-          {errors.content && <p className="text-xs text-danger">{errors.content}</p>}
+          {errors.content && <div style={errorTextStyle}>{errors.content}</div>}
         </div>
 
-        <div className="space-y-6">
-          <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-            <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Publish Settings
-            </div>
+        <div>
+          <div style={{ ...cardStyle, marginBottom: 20, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ ...sectionHeaderStyle, marginBottom: 0 }}>Publish Settings</div>
 
             <div>
-              <Label htmlFor="article-status">Status</Label>
-              <Select value={status} onValueChange={(v) => v && setStatus(v as BsContentStatus)}>
-                <SelectTrigger id="article-status" className="mt-1.5">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                  <SelectItem value="Published">Published</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
+              <label style={labelStyle} htmlFor="article-status">Status</label>
+              <select
+                id="article-status"
+                style={selectStyle()}
+                value={status}
+                onChange={(e) => setStatus(e.target.value as BsContentStatus)}
+                onFocus={handleFieldFocus}
+                onBlur={(e) => handleFieldBlur(e)}
+              >
+                <option value="Draft">Draft</option>
+                <option value="Published">Published</option>
+                <option value="Archived">Archived</option>
+              </select>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div>
-                <Label htmlFor="article-featured">Featured</Label>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Enabling this demotes the current featured article — the homepage hero shows only one.
-                </p>
+                <label style={{ ...labelStyle, marginBottom: 2 }} htmlFor="article-featured">Featured</label>
+                <div style={{ ...helperStyle, marginTop: 0 }}>
+                  Enabling this demotes the current featured article.
+                </div>
               </div>
-              <Switch id="article-featured" checked={featured} onCheckedChange={setFeatured} />
+              <Toggle id="article-featured" checked={featured} onChange={setFeatured} />
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="article-editors-pick">Editor&apos;s Pick</Label>
-              <Switch id="article-editors-pick" checked={editorsPick} onCheckedChange={setEditorsPick} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <label style={{ ...labelStyle, marginBottom: 0 }} htmlFor="article-editors-pick">Editor&apos;s Pick</label>
+              <Toggle id="article-editors-pick" checked={editorsPick} onChange={setEditorsPick} />
             </div>
           </div>
 
-          <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-            <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Categorization
-            </div>
+          <div style={{ ...cardStyle, marginBottom: 20, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ ...sectionHeaderStyle, marginBottom: 0 }}>Categorization</div>
 
             <div>
-              <Label htmlFor="article-author">Author</Label>
-              <Select value={authorId || undefined} onValueChange={(v) => v && setAuthorId(v)}>
-                <SelectTrigger id="article-author" className="mt-1.5" aria-invalid={!!errors.authorId}>
-                  <SelectValue placeholder={optionsLoading ? "Loading..." : "Select an author"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {authors.map((author) => (
-                    <SelectItem key={author.id} value={author.id}>
-                      {author.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.authorId && <p className="mt-1 text-xs text-danger">{errors.authorId}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="article-category">Category</Label>
-              <Select value={categoryId || undefined} onValueChange={(v) => v && setCategoryId(v)}>
-                <SelectTrigger id="article-category" className="mt-1.5" aria-invalid={!!errors.categoryId}>
-                  <SelectValue placeholder={optionsLoading ? "Loading..." : "Select a category"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.categoryId && <p className="mt-1 text-xs text-danger">{errors.categoryId}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="article-topic">Topic (optional)</Label>
-              <Select
-                value={topicId || undefined}
-                onValueChange={(v) => setTopicId(v || "")}
+              <label style={labelStyle} htmlFor="article-author">Author</label>
+              <select
+                id="article-author"
+                style={selectStyle(!!errors.authorId)}
+                value={authorId}
+                onChange={(e) => setAuthorId(e.target.value)}
+                onFocus={handleFieldFocus}
+                onBlur={(e) => handleFieldBlur(e, !!errors.authorId)}
               >
-                <SelectTrigger id="article-topic" className="mt-1.5">
-                  <SelectValue placeholder="No topic" />
-                </SelectTrigger>
-                <SelectContent>
-                  {topics.map((topic) => (
-                    <SelectItem key={topic.id} value={topic.id}>
-                      {topic.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">{optionsLoading ? "Loading..." : "Select an author"}</option>
+                {authors.map((author) => (
+                  <option key={author.id} value={author.id}>{author.name}</option>
+                ))}
+              </select>
+              {errors.authorId && <div style={errorTextStyle}>{errors.authorId}</div>}
             </div>
 
             <div>
-              <Label htmlFor="article-read-time">Read Time</Label>
-              <div className="mt-1.5 flex gap-2">
-                <Input
+              <label style={labelStyle} htmlFor="article-category">Category</label>
+              <select
+                id="article-category"
+                style={selectStyle(!!errors.categoryId)}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                onFocus={handleFieldFocus}
+                onBlur={(e) => handleFieldBlur(e, !!errors.categoryId)}
+              >
+                <option value="">{optionsLoading ? "Loading..." : "Select a category"}</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+              {errors.categoryId && <div style={errorTextStyle}>{errors.categoryId}</div>}
+            </div>
+
+            <div>
+              <label style={labelStyle} htmlFor="article-topic">Topic (optional)</label>
+              <select
+                id="article-topic"
+                style={selectStyle()}
+                value={topicId}
+                onChange={(e) => setTopicId(e.target.value)}
+                onFocus={handleFieldFocus}
+                onBlur={(e) => handleFieldBlur(e)}
+              >
+                <option value="">No topic</option>
+                {topics.map((topic) => (
+                  <option key={topic.id} value={topic.id}>{topic.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle} htmlFor="article-read-time">Read Time</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
                   id="article-read-time"
+                  style={inputStyle()}
                   value={readTime}
                   onChange={(e) => setReadTime(e.target.value)}
+                  onFocus={handleFieldFocus}
+                  onBlur={(e) => handleFieldBlur(e)}
                   placeholder="6 min read"
                 />
-                <Button type="button" variant="outline" size="icon" onClick={handleCalculateReadTime} title="Calculate from content">
-                  <Sparkles className="size-4" />
-                </Button>
+                <button
+                  type="button"
+                  onClick={handleCalculateReadTime}
+                  title="Calculate from content"
+                  style={{
+                    flexShrink: 0,
+                    width: 38,
+                    height: 38,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: C.white,
+                    border: `1px solid ${C.borderLight}`,
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    color: C.textMuted,
+                  }}
+                >
+                  <Sparkles size={15} />
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-border bg-card p-5">
-            <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Cover Image
-            </div>
+          <div style={{ ...cardStyle, marginBottom: 20 }}>
+            <div style={sectionHeaderStyle}>Cover Image</div>
             <ImageUpload value={coverImageUrl} onChange={setCoverImageUrl} folder="covers" />
           </div>
 
-          <div className="space-y-2 rounded-xl border border-border bg-card p-5">
-            <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              SEO
-            </div>
-            <Label htmlFor="article-meta">Meta Description</Label>
-            <Textarea
+          <div style={{ ...cardStyle, marginBottom: 20 }}>
+            <div style={sectionHeaderStyle}>SEO</div>
+            <label style={labelStyle} htmlFor="article-meta">Meta Description</label>
+            <textarea
               id="article-meta"
-              className="min-h-18"
+              style={{ ...inputStyle(), minHeight: 72, resize: "vertical" }}
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
+              onFocus={handleFieldFocus}
+              onBlur={(e) => handleFieldBlur(e)}
               placeholder={excerpt || "Defaults to the excerpt if left blank..."}
             />
           </div>
         </div>
       </div>
 
-      <div className="sticky bottom-0 -mx-5 mt-6 border-t border-border bg-surface px-5 py-4 md:-mx-8 md:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-danger">
-            {submitError && (
-              <>
-                <AlertCircle className="size-4" />
-                {submitError}
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {submitting && (
-              <span className="flex items-center gap-1.5 text-sm text-text-muted">
-                <Loader2 className="size-4 animate-spin" />
-                Saving...
-              </span>
-            )}
-            <Button variant="ghost" onClick={handleCancel} disabled={!!submitting}>
-              Cancel
-            </Button>
-            {mode === "edit" && status === "Published" && (
-              <Button variant="outline" onClick={() => submit("Draft")} disabled={!!submitting}>
-                <Undo2 className="size-4" />
-                {submitting === "Draft" ? "Unpublishing..." : "Unpublish"}
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => submit("Draft")} disabled={!!submitting}>
-              <Save className="size-4" />
-              {submitting === "Draft" ? "Saving..." : "Save as Draft"}
-            </Button>
-            <Button onClick={() => submit("Published")} disabled={!!submitting}>
-              <Send className="size-4" />
-              {submitting === "Published" ? "Publishing..." : "Publish"}
-            </Button>
-          </div>
-        </div>
+      <div
+        style={{
+          position: "sticky",
+          bottom: 0,
+          zIndex: 10,
+          background: C.white,
+          borderTop: `1px solid ${C.borderLight}`,
+          padding: "16px 32px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: 12,
+          marginLeft: -32,
+          marginRight: -32,
+        }}
+      >
+        {submitting && (
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: C.textMuted, marginRight: 4 }}>
+            <Loader2 size={15} style={{ animation: "spin 0.8s linear infinite" }} />
+            Saving...
+          </span>
+        )}
+        {submitError && (
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: C.red400, marginRight: 4 }}>
+            <AlertCircle size={15} />
+            {submitError}
+          </span>
+        )}
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+        <button
+          type="button"
+          onClick={handleCancel}
+          disabled={!!submitting}
+          style={{
+            ...buttonBase,
+            background: "none",
+            color: C.textMuted,
+            fontWeight: 500,
+            cursor: submitting ? "not-allowed" : "pointer",
+            opacity: submitting ? 0.6 : 1,
+          }}
+        >
+          Cancel
+        </button>
+
+        {mode === "edit" && status === "Published" && (
+          <button
+            type="button"
+            onClick={() => submit("Draft")}
+            disabled={!!submitting}
+            style={{
+              ...buttonBase,
+              background: C.white,
+              color: C.forest700,
+              border: `1px solid ${C.borderLight}`,
+              cursor: submitting ? "not-allowed" : "pointer",
+              opacity: submitting ? 0.6 : 1,
+            }}
+          >
+            <Undo2 size={15} />
+            {submitting === "Draft" ? "Unpublishing..." : "Unpublish"}
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => submit("Draft")}
+          disabled={!!submitting}
+          style={{
+            ...buttonBase,
+            background: C.white,
+            color: C.forest700,
+            border: `1px solid ${C.borderLight}`,
+            cursor: submitting ? "not-allowed" : "pointer",
+            opacity: submitting ? 0.6 : 1,
+          }}
+        >
+          <Save size={15} />
+          {submitting === "Draft" ? "Saving..." : "Save as Draft"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => submit("Published")}
+          disabled={!!submitting}
+          style={{
+            ...buttonBase,
+            background: C.gold500,
+            color: C.forest800,
+            cursor: submitting ? "not-allowed" : "pointer",
+            opacity: submitting ? 0.6 : 1,
+          }}
+        >
+          <Send size={15} />
+          {submitting === "Published" ? "Publishing..." : "Publish"}
+        </button>
       </div>
     </div>
   )

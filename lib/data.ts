@@ -29,6 +29,8 @@ type NavDropdown = {
   dropdown: { group: string; items: NavDropdownItem[] }[];
 };
 
+const BS_SITE_URL = process.env.NEXT_PUBLIC_BS_SITE_URL || "https://bytesphere.com";
+
 export const NAV: (NavLeaf | NavDropdown)[] = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
@@ -55,14 +57,14 @@ export const NAV: (NavLeaf | NavDropdown)[] = [
       {
         group: "",
         items: [
-          { label: "Tech", href: "https://bytesphere.com" },
-          { label: "Business", href: "https://bytesphere.com" },
-          { label: "Energy", href: "https://bytesphere.com" },
-          { label: "Finance", href: "https://bytesphere.com" },
-          { label: "Healthcare", href: "https://bytesphere.com" },
-          { label: "Logistics", href: "https://bytesphere.com" },
-          { label: "Marketing", href: "https://bytesphere.com" },
-          { label: "Startups", href: "https://bytesphere.com" },
+          { label: "Tech", href: `${BS_SITE_URL}/category/tech` },
+          { label: "Business", href: `${BS_SITE_URL}/category/business` },
+          { label: "Energy", href: `${BS_SITE_URL}/category/energy` },
+          { label: "Finance", href: `${BS_SITE_URL}/category/finance` },
+          { label: "Healthcare", href: `${BS_SITE_URL}/category/healthcare` },
+          { label: "Logistics", href: `${BS_SITE_URL}/category/logistics` },
+          { label: "Marketing", href: `${BS_SITE_URL}/category/marketing` },
+          { label: "Startups", href: `${BS_SITE_URL}/category/startups` },
         ],
       },
     ],
@@ -858,8 +860,8 @@ export const CONTACT_REACH = [
   {
     icon: "Phone",
     label: "Call Our Team",
-    value: "+1 504 541 5406",
-    href: "tel:+15045415406",
+    value: "+91-7972253737",
+    href: "tel:+917972253737",
     desc: "Available Monday to Friday during business hours.",
   },
 ];
@@ -870,7 +872,7 @@ export const CONTACT_OFFICES = [
     country: "India",
     flag: "IN",
     address: "Kasarwadi, PCMC, Pune - 411034",
-    phone: "+1 504 541 5406",
+    phone: "+91-7972253737",
     timezone: "Asia/Kolkata",
     tzLabel: "IST",
     mapX: 67,

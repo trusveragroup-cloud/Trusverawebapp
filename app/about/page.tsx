@@ -732,25 +732,25 @@ function VideoSection() {
 
 const FOUNDERS = [
   {
-    name: "Arbaz Thange",
-    role: "Founder & Director",
-    bio: "Co-founder of TrusVera Group, driving the vision for precision B2B intelligence and demand generation across global enterprise markets.",
-    image: "/Founder Image/Arbaz Thange_photo.png",
-    alt: "Arbaz Thange - Founder & Director",
-  },
-  {
-    name: "Dinesh Lilani",
-    role: "Founder & Director",
-    bio: "Co-founder of TrusVera Group, bringing deep expertise in B2B sales strategy and enterprise account development to revenue teams worldwide.",
-    image: "/Founder Image/Dinesh Lilani.jpg",
-    alt: "Dinesh Lilani - Founder & Director",
-  },
-  {
     name: "Pooja Rasal",
     role: "Founder",
     bio: "Co-founder of TrusVera Group, contributing strategic leadership and operational excellence to drive TrusVera's growth in the B2B intelligence space.",
     image: "/Founder Image/Poojadi.jpeg",
     alt: "Pooja Rasal - Founder",
+  },
+  {
+    name: "Dinesh Lilani",
+    role: "Co-Founder & Director",
+    bio: "Co-founder of TrusVera Group, bringing deep expertise in B2B sales strategy and enterprise account development to revenue teams worldwide.",
+    image: "/Founder Image/Dinesh_L.png",
+    alt: "Dinesh Lilani - Co-Founder & Director",
+  },
+  {
+    name: "Arbaz Thange",
+    role: "Co-Founder & Director",
+    bio: "Co-founder of TrusVera Group, driving the vision for precision B2B intelligence and demand generation across global enterprise markets.",
+    image: "/Founder Image/Arbaz Thange_photo.png",
+    alt: "Arbaz Thange - Co-Founder & Director",
   },
 ];
 
@@ -761,8 +761,8 @@ function LeadershipTeam() {
     <section style={{ background: C.cream50, padding: "80px 24px" }}>
       <style>{`
         @media (max-width: 768px) {
-          .founders-grid { flex-direction: column !important; align-items: center !important; }
-          .founder-card { width: 100% !important; max-width: 400px !important; }
+          .founders-grid { grid-template-columns: 1fr !important; }
+          .founder-card { max-width: 400px; margin: 0 auto; }
         }
       `}</style>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
@@ -774,7 +774,7 @@ function LeadershipTeam() {
           </p>
         </div>
 
-        <div className="founders-grid" style={{ display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", maxWidth: 1300, margin: "0 auto" }}>
+        <div className="founders-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 40, maxWidth: 1300, margin: "0 auto" }}>
           {FOUNDERS.map((founder) => (
             <div
               key={founder.name}
@@ -784,11 +784,9 @@ function LeadershipTeam() {
                 borderRadius: 16,
                 overflow: "hidden",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
-                width: 380,
-                flexShrink: 0,
               }}
             >
-              <div style={{ position: "relative", height: 420 }}>
+              <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 5" }}>
                 <Image
                   src={founder.image}
                   alt={founder.alt}

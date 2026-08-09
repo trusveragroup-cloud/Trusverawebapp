@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/supabase/requireAdmin"
 import { BS_CONTENT_STATUSES, type BsContentStatus } from "@/lib/bytesphere/types"
+import { notifySubscribers } from "@/lib/bytesphere/notify"
 
 const RELATION_SELECT = `
   *,
@@ -120,6 +121,30 @@ export async function POST(req: NextRequest) {
     if (insertError) {
       console.error("Blog insert error:", insertError)
       return NextResponse.json({ error: "Failed to save blog post. Please try again." }, { status: 500 })
+    }
+
+    // New blog post created directly as Published — always a first publish.
+    // Fire and forget: never let a notification failure affect this response.
+    if (status === "Published") {
+      ;(async () => {
+        try {
+          const [{ data: authorRow }, { data: categoryRow }] = await Promise.all([
+            supabase.from("bs_authors").select("name").eq("id", authorId).maybeSingle(),
+            supabase.from("bs_categories").select("name").eq("id", categoryId).maybeSingle(),
+          ])
+          await notifySubscribers({
+            type: "blog",
+            title: title.trim(),
+            excerpt: excerpt.trim(),
+            slug: slug.trim(),
+            coverImageUrl: coverImageUrl?.trim() || null,
+            authorName: authorRow?.name ?? null,
+            categoryName: categoryRow?.name ?? null,
+          })
+        } catch (err) {
+          console.error("Notification error (non-blocking):", err)
+        }
+      })()
     }
 
     return NextResponse.json(

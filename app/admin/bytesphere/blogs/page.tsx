@@ -2,29 +2,42 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertCircle, Copy, Edit2, FileText, Loader2, Plus, Search, Trash2, X } from "lucide-react"
-
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select"
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table"
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { cn } from "@/lib/utils"
+  AlertCircle, Copy, FileText, Loader2, Pencil, Plus, Search, Trash2,
+} from "lucide-react"
+import { C } from "@/lib/colors"
 import type { BsAuthor, BsBlogWithRelations, BsCategory, BsContentStatus } from "@/lib/bytesphere/types"
 
-const STATUS_VARIANT: Record<BsContentStatus, "status-published" | "status-draft" | "status-archived"> = {
-  Published: "status-published",
-  Draft: "status-draft",
-  Archived: "status-archived",
+const gridColumns = "minmax(220px,2fr) 140px 180px 130px 130px 120px"
+
+const dropdownStyle: React.CSSProperties = {
+  height: 36,
+  padding: "0 12px",
+  border: `1px solid ${C.slate200}`,
+  borderRadius: 6,
+  fontFamily: "var(--font-inter)",
+  fontSize: 13,
+  color: C.forest900,
+  background: C.cream100,
+  outline: "none",
+}
+
+const STATUS_STYLES: Record<BsContentStatus, { background: string; color: string; border?: string }> = {
+  Published: { background: "rgba(74,186,138,0.10)", color: C.forest600 },
+  Draft: { background: C.cream200, color: C.slate500 },
+  Archived: { background: "transparent", color: C.slate500, border: `1px solid ${C.slate300}` },
+}
+
+const actionButtonStyle: React.CSSProperties = {
+  width: 36,
+  height: 36,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 8,
+  background: "none",
+  border: "none",
+  cursor: "pointer",
 }
 
 export default function BlogsListPage() {
@@ -40,9 +53,7 @@ export default function BlogsListPage() {
   const [authorFilter, setAuthorFilter] = useState("All")
 
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<BsBlogWithRelations | null>(null)
-  const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState("")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const filtersActive =
     !!search || statusFilter !== "All" || categoryFilter !== "All" || authorFilter !== "All"
@@ -92,10 +103,26 @@ export default function BlogsListPage() {
     })
   }, [])
 
-  const resultLabel = useMemo(
-    () => `${blogs.length} blog post${blogs.length === 1 ? "" : "s"}`,
-    [blogs.length]
-  )
+  // fetchBlogs already applies status/category/author/search server-side,
+  // so an unfiltered fetch is needed separately to keep the stat pills stable.
+  const [allBlogs, setAllBlogs] = useState<BsBlogWithRelations[]>([])
+  const fetchAllBlogs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/bytesphere/blogs")
+      const data = await res.json()
+      setAllBlogs(res.ok ? data.blogs || [] : [])
+    } catch {
+      setAllBlogs([])
+    }
+  }, [])
+  useEffect(() => { fetchAllBlogs() }, [fetchAllBlogs])
+
+  const stats = useMemo(() => ([
+    { label: `${allBlogs.length} Total`, dot: C.slate400 },
+    { label: `${allBlogs.filter((b) => b.status === "Published").length} Published`, dot: C.forest600 },
+    { label: `${allBlogs.filter((b) => b.status === "Draft").length} Drafts`, dot: C.slate400 },
+    { label: `${allBlogs.filter((b) => b.status === "Archived").length} Archived`, dot: C.slate300 },
+  ]), [allBlogs])
 
   const handleDuplicate = async (blog: BsBlogWithRelations) => {
     setDuplicatingId(blog.id)
@@ -123,6 +150,7 @@ export default function BlogsListPage() {
         return
       }
       fetchBlogs()
+      fetchAllBlogs()
     } catch {
       alert("Network error. Please try again.")
     } finally {
@@ -130,258 +158,385 @@ export default function BlogsListPage() {
     }
   }
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return
-    setDeleting(true)
-    setDeleteError("")
+  const handleDelete = async (blog: BsBlogWithRelations) => {
+    if (!window.confirm(`Delete "${blog.title}"? This cannot be undone.`)) return
+    setDeletingId(blog.id)
     try {
-      const res = await fetch(`/api/admin/bytesphere/blogs/${deleteTarget.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/bytesphere/blogs/${blog.id}`, { method: "DELETE" })
       const data = await res.json()
       if (!res.ok) {
-        setDeleteError(data.error || "Failed to delete blog post.")
+        alert(data.error || "Failed to delete blog post.")
         return
       }
-      setDeleteTarget(null)
       fetchBlogs()
+      fetchAllBlogs()
     } catch {
-      setDeleteError("Network error. Please try again.")
+      alert("Network error. Please try again.")
     } finally {
-      setDeleting(false)
+      setDeletingId(null)
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <div style={{ padding: 32 }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .blog-row:hover { background: ${C.cream200} !important; }
+        .blog-action:hover { background: ${C.cream200}; }
+      `}</style>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
-          <h1 className="text-2xl font-semibold text-text">Blogs</h1>
-          <p className="mt-1 text-sm text-text-muted">Manage ByteSphere&apos;s blog posts.</p>
+          <h1 style={{ fontFamily: "var(--font-dm-serif)", fontSize: 26, color: C.forest800, margin: 0 }}>
+            Blogs
+          </h1>
+          <div style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: C.slate500, marginTop: 4 }}>
+            Manage ByteSphere&apos;s blog posts.
+          </div>
         </div>
-        <Link href="/admin/bytesphere/blogs/new" className={buttonVariants({})}>
-          <Plus className="size-4" />
+
+        <Link
+          href="/admin/bytesphere/blogs/new"
+          style={{
+            background: C.forest600,
+            color: C.cream100,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            fontFamily: "var(--font-inter)",
+            fontSize: 13,
+            fontWeight: 700,
+            padding: "10px 20px",
+            borderRadius: 8,
+            textDecoration: "none",
+            flexShrink: 0,
+          }}
+        >
+          <Plus size={16} />
           New Blog Post
         </Link>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-56 flex-1">
-            <Label htmlFor="blogs-search" className="mb-1.5 text-xs text-text-muted">
-              Search
-            </Label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-text-subtle" />
-              <Input
-                id="blogs-search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by title"
-                className={cn("pl-8", search && "pr-8")}
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  aria-label="Clear search"
-                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-0.5 text-text-subtle outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            style={{
+              background: C.cream100,
+              border: `1px solid ${C.slate200}`,
+              borderRadius: 20,
+              padding: "6px 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: stat.dot, flexShrink: 0, display: "block" }} />
+            <span style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: C.forest800 }}>{stat.label}</span>
           </div>
-
-          <div className="w-44">
-            <Label htmlFor="blogs-status" className="mb-1.5 text-xs text-text-muted">
-              Status
-            </Label>
-            <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
-              <SelectTrigger id="blogs-status"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All statuses</SelectItem>
-                <SelectItem value="Draft">Draft</SelectItem>
-                <SelectItem value="Published">Published</SelectItem>
-                <SelectItem value="Archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-48">
-            <Label htmlFor="blogs-category" className="mb-1.5 text-xs text-text-muted">
-              Category
-            </Label>
-            <Select value={categoryFilter} onValueChange={(v) => v && setCategoryFilter(v)}>
-              <SelectTrigger id="blogs-category"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All categories</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-48">
-            <Label htmlFor="blogs-author" className="mb-1.5 text-xs text-text-muted">
-              Author
-            </Label>
-            <Select value={authorFilter} onValueChange={(v) => v && setAuthorFilter(v)}>
-              <SelectTrigger id="blogs-author"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All authors</SelectItem>
-                {authors.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 text-sm text-text-muted">
-          {!loading && !fetchError && <span>{resultLabel}</span>}
-          {filtersActive && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="font-medium text-brand-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
+        ))}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface">
-        {loading && (
-          <div className="flex flex-col items-center justify-center gap-3 py-16">
-            <Loader2 className="size-8 animate-spin text-text-subtle" />
-            <p className="text-sm text-text-muted">Loading blog posts...</p>
-          </div>
-        )}
+      <div
+        style={{
+          background: C.cream100,
+          borderRadius: 10,
+          border: `1px solid ${C.slate200}`,
+          padding: "14px 20px",
+          marginBottom: 20,
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+          <Search
+            size={15}
+            color={C.slate400}
+            style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}
+          />
+          <input
+            type="text"
+            placeholder="Search by title..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              height: 36,
+              padding: "0 12px 0 38px",
+              border: `1px solid ${C.slate200}`,
+              borderRadius: 6,
+              fontFamily: "var(--font-inter)",
+              fontSize: 13,
+              color: C.textDark,
+              background: C.cream100,
+              boxSizing: "border-box",
+              outline: "none",
+            }}
+          />
+        </div>
 
-        {!loading && fetchError && (
-          <div className="flex flex-col items-center justify-center gap-3 py-16">
-            <AlertCircle className="size-8 text-danger" />
-            <p className="text-sm text-danger">{fetchError}</p>
-            <Button variant="outline" onClick={fetchBlogs}>Retry</Button>
-          </div>
-        )}
+        <select style={dropdownStyle} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="All">All Statuses</option>
+          <option value="Draft">Draft</option>
+          <option value="Published">Published</option>
+          <option value="Archived">Archived</option>
+        </select>
 
-        {!loading && !fetchError && blogs.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <FileText className="size-10 text-text-subtle" />
-            <p className="text-sm text-text-muted">No blog posts match your filters.</p>
-            <Link href="/admin/bytesphere/blogs/new" className={buttonVariants({ size: "sm" })}>
-              <Plus className="size-4" />
-              Create your first blog post
-            </Link>
-          </div>
-        )}
+        <select style={dropdownStyle} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <option value="All">All Categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
 
-        {!loading && !fetchError && blogs.length > 0 && (
-          <div className="max-h-[calc(100vh-320px)] overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-text-muted">Title</TableHead>
-                  <TableHead className="w-36 text-text-muted">Category</TableHead>
-                  <TableHead className="w-40 text-text-muted">Author</TableHead>
-                  <TableHead className="w-28 text-text-muted">Status</TableHead>
-                  <TableHead className="w-28 text-text-muted">Published</TableHead>
-                  <TableHead className="w-28 text-right text-text-muted">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {blogs.map((blog) => (
-                  <TableRow key={blog.id}>
-                    <TableCell title={blog.title} className="max-w-0 truncate text-sm font-medium text-text">
+        <select style={dropdownStyle} value={authorFilter} onChange={(e) => setAuthorFilter(e.target.value)}>
+          <option value="All">All Authors</option>
+          {authors.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </select>
+
+        {filtersActive && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: "var(--font-inter)",
+              fontSize: 13,
+              fontWeight: 500,
+              color: C.forest600,
+            }}
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      <div style={{ background: C.cream100, borderRadius: 12, border: `1px solid ${C.slate200}`, overflow: "hidden" }}>
+        <div style={{ overflowX: "auto" }}>
+          <div style={{ minWidth: 900 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: gridColumns,
+                background: C.cream200,
+                padding: "10px 20px",
+                fontFamily: "var(--font-inter)",
+                fontSize: 11,
+                color: C.slate500,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+              }}
+            >
+              <span>Title</span>
+              <span>Category</span>
+              <span>Author</span>
+              <span>Status</span>
+              <span>Published</span>
+              <span style={{ textAlign: "right" }}>Actions</span>
+            </div>
+
+            {loading ? (
+              <div style={{ padding: 60, textAlign: "center" }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    border: `3px solid ${C.slate200}`,
+                    borderTop: `3px solid ${C.forest600}`,
+                    borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite",
+                    margin: "0 auto 16px",
+                  }}
+                />
+                <p style={{ fontFamily: "var(--font-inter)", fontSize: 14, color: C.slate400 }}>
+                  Loading blog posts...
+                </p>
+              </div>
+            ) : fetchError ? (
+              <div style={{ padding: 60, textAlign: "center" }}>
+                <AlertCircle size={28} color={C.red400} style={{ margin: "0 auto 12px" }} />
+                <p style={{ fontFamily: "var(--font-inter)", fontSize: 14, color: C.red400, marginBottom: 16 }}>
+                  {fetchError}
+                </p>
+                <button
+                  type="button"
+                  onClick={fetchBlogs}
+                  style={{
+                    background: C.forest600,
+                    color: C.cream100,
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "8px 20px",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-inter)",
+                    fontSize: 13,
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : blogs.length === 0 ? (
+              <div style={{ padding: 60, textAlign: "center" }}>
+                <FileText size={40} color={C.slate300} style={{ margin: "0 auto 16px" }} />
+                <p style={{ fontFamily: "var(--font-inter)", fontSize: 16, color: C.slate500, marginBottom: 16 }}>
+                  No blog posts match your filters.
+                </p>
+                <Link
+                  href="/admin/bytesphere/blogs/new"
+                  style={{
+                    background: C.forest600,
+                    color: C.cream100,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontFamily: "var(--font-inter)",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    padding: "10px 20px",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                  }}
+                >
+                  <Plus size={16} />
+                  New Blog Post
+                </Link>
+              </div>
+            ) : (
+              blogs.map((blog) => {
+                const statusStyle = STATUS_STYLES[blog.status]
+                return (
+                  <div
+                    key={blog.id}
+                    className="blog-row"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: gridColumns,
+                      height: 56,
+                      padding: "0 20px",
+                      alignItems: "center",
+                      borderTop: `1px solid ${C.slate100}`,
+                      background: C.cream100,
+                    }}
+                  >
+                    <span
+                      title={blog.title}
+                      style={{
+                        fontFamily: "var(--font-inter)",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: C.forest800,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        paddingRight: 12,
+                      }}
+                    >
                       {blog.title}
-                    </TableCell>
-                    <TableCell>
+                    </span>
+
+                    <span>
                       {blog.category?.name ? (
-                        <span className="inline-flex items-center rounded-full bg-surface-sunken px-2.5 py-1 text-xs font-medium text-text-muted">
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            background: C.cream200,
+                            color: C.slate500,
+                            fontFamily: "var(--font-inter)",
+                            fontSize: 12,
+                            fontWeight: 500,
+                            padding: "3px 10px",
+                            borderRadius: 20,
+                          }}
+                        >
                           {blog.category.name}
                         </span>
                       ) : (
-                        <span className="text-text-subtle">—</span>
+                        <span style={{ color: C.slate300 }}>—</span>
                       )}
-                    </TableCell>
-                    <TableCell className="text-text-muted">{blog.author?.name ?? "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={STATUS_VARIANT[blog.status]}>{blog.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-text-muted tabular-nums">
+                    </span>
+
+                    <span style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: C.slate500 }}>
+                      {blog.author?.name ?? "—"}
+                    </span>
+
+                    <span>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          background: statusStyle.background,
+                          color: statusStyle.color,
+                          border: statusStyle.border,
+                          fontFamily: "var(--font-inter)",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                          padding: "4px 10px",
+                          borderRadius: 20,
+                        }}
+                      >
+                        {blog.status}
+                      </span>
+                    </span>
+
+                    <span style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: C.slate500 }}>
                       {blog.published_at
                         ? new Date(blog.published_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
                         : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/admin/bytesphere/blogs/${blog.id}/edit`}
-                          title="Edit blog post"
-                          className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
-                        >
-                          <Edit2 className="size-4" />
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="icon-lg"
-                          title="Duplicate blog post"
-                          disabled={duplicatingId === blog.id}
-                          onClick={() => handleDuplicate(blog)}
-                        >
-                          {duplicatingId === blog.id ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Copy className="size-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-lg"
-                          title="Delete blog post"
-                          className="text-text-muted hover:bg-danger/10 hover:text-danger"
-                          onClick={() => { setDeleteTarget(blog); setDeleteError("") }}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
+                    </span>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this blog post?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTarget && (
-                <>
-                  <strong>{deleteTarget.title}</strong> will be permanently deleted. This cannot be undone.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {deleteError && (
-            <p className="flex items-center gap-1.5 text-sm text-danger">
-              <AlertCircle className="size-4" />
-              {deleteError}
-            </p>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                    <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "flex-end" }}>
+                      <Link
+                        href={`/admin/bytesphere/blogs/${blog.id}/edit`}
+                        title="Edit blog post"
+                        className="blog-action"
+                        style={{ ...actionButtonStyle, textDecoration: "none" }}
+                      >
+                        <Pencil size={15} color={C.forest600} />
+                      </Link>
+                      <button
+                        type="button"
+                        className="blog-action"
+                        style={actionButtonStyle}
+                        title="Duplicate blog post"
+                        disabled={duplicatingId === blog.id}
+                        onClick={() => handleDuplicate(blog)}
+                      >
+                        {duplicatingId === blog.id ? (
+                          <Loader2 size={15} color={C.slate400} style={{ animation: "spin 0.8s linear infinite" }} />
+                        ) : (
+                          <Copy size={15} color={C.slate500} />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="blog-action"
+                        style={actionButtonStyle}
+                        title="Delete blog post"
+                        disabled={deletingId === blog.id}
+                        onClick={() => handleDelete(blog)}
+                      >
+                        {deletingId === blog.id ? (
+                          <Loader2 size={15} color={C.slate400} style={{ animation: "spin 0.8s linear infinite" }} />
+                        ) : (
+                          <Trash2 size={15} color="#DC2626" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

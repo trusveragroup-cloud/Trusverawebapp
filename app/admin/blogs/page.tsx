@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { C } from "@/lib/colors"
 import {
   PenSquare, Search, Eye, Edit2, Trash2,
@@ -35,12 +35,11 @@ const STATUS_TABS = [
 
 function AdminBlogsPageContent() {
   const { can } = usePermissions()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const justPublished = searchParams.get("published") === "true"
   const justSaved = searchParams.get("saved") === "true"
 
-  const [blogs, setBlogs] = useState<BlogRow[]>([])
+  const [allPosts, setAllPosts] = useState<BlogRow[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
@@ -51,26 +50,28 @@ function AdminBlogsPageContent() {
     setLoading(true)
     setFetchError("")
     try {
-      const params = new URLSearchParams()
-      if (statusFilter !== "All") params.set("status", statusFilter)
-      if (searchQuery) params.set("search", searchQuery)
-
-      const res = await fetch(`/api/admin/blogs?${params.toString()}`)
+      const res = await fetch("/api/admin/blogs")
       const data = await res.json()
 
       if (!res.ok) {
         setFetchError(data.error || "Failed to load posts.")
         return
       }
-      setBlogs(data.blogs)
+      setAllPosts(data.blogs)
     } catch {
       setFetchError("Network error. Could not load posts.")
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, searchQuery])
+  }, [])
 
   useEffect(() => { fetchBlogs() }, [fetchBlogs])
+
+  const filtered = allPosts.filter((blog) => {
+    if (statusFilter !== "All" && blog.status !== statusFilter) return false
+    if (searchQuery && !blog.title.toLowerCase().includes(searchQuery.toLowerCase())) return false
+    return true
+  })
 
   const handleDelete = async (id: string, title: string) => {
     if (!window.confirm(`Archive "${title}"? It will be removed from the website.`)) return
@@ -91,10 +92,10 @@ function AdminBlogsPageContent() {
   }
 
   const statCards = [
-    { label: "Total Posts", value: blogs.length, icon: PenSquare, iconColor: C.forest600 },
-    { label: "Published", value: blogs.filter((b) => b.status === "Published").length, icon: Globe, iconColor: C.forest600 },
-    { label: "Drafts", value: blogs.filter((b) => b.status === "Draft").length, icon: Clock, iconColor: C.slate400 },
-    { label: "Featured", value: blogs.filter((b) => b.featured).length, icon: Star, iconColor: C.gold500 },
+    { label: "Total Posts", value: allPosts.length, icon: PenSquare, iconColor: C.forest600 },
+    { label: "Published", value: allPosts.filter((b) => b.status === "Published").length, icon: Globe, iconColor: C.forest600 },
+    { label: "Drafts", value: allPosts.filter((b) => b.status === "Draft").length, icon: Clock, iconColor: C.slate400 },
+    { label: "Featured", value: allPosts.filter((b) => b.featured).length, icon: Star, iconColor: C.gold500 },
   ]
 
   return (
@@ -291,26 +292,6 @@ function AdminBlogsPageContent() {
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2.5fr 1fr 1fr 1fr 100px",
-            padding: "10px 20px",
-            background: C.cream200,
-            fontFamily: "var(--font-inter)",
-            fontSize: 11,
-            color: C.slate500,
-            textTransform: "uppercase",
-            letterSpacing: 1,
-          }}
-        >
-          <div>Title</div>
-          <div>Category</div>
-          <div>Status</div>
-          <div>Date</div>
-          <div>Actions</div>
-        </div>
-
         {loading && (
           <div style={{ padding: 60, textAlign: "center" }}>
             <div
@@ -355,7 +336,7 @@ function AdminBlogsPageContent() {
           </div>
         )}
 
-        {!loading && !fetchError && blogs.length === 0 && (
+        {!loading && !fetchError && filtered.length === 0 && (
           <div style={{ padding: 60, textAlign: "center" }}>
             <PenSquare size={40} color={C.slate300} style={{ marginBottom: 16 }} />
             <div style={{ fontFamily: "var(--font-inter)", fontSize: 16, color: C.slate500 }}>
@@ -381,145 +362,192 @@ function AdminBlogsPageContent() {
           </div>
         )}
 
-        {!loading && !fetchError && blogs.map((blog) => {
-          const displayDate = blog.published_at
-            ? new Date(blog.published_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" })
-            : new Date(blog.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" })
-
-          const statusStyles =
-            blog.status === "Published"
-              ? { background: C.forest100, color: C.forest700, Icon: CheckCircle }
-              : blog.status === "Draft"
-              ? { background: C.cream300, color: C.slate600, Icon: Clock }
-              : { background: C.cream200, color: C.slate400, Icon: Archive }
-
-          return (
-            <div
-              key={blog.id}
-              className="blog-row"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "2.5fr 1fr 1fr 1fr 100px",
-                padding: "14px 20px",
-                alignItems: "center",
-                borderTop: `1px solid ${C.slate100}`,
-                background: C.cream100,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "flex-start", flexDirection: "column", gap: 4 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {blog.featured && <Star size={13} color={C.gold500} fill={C.gold500} />}
-                  <div
+        {!loading && !fetchError && filtered.length > 0 && (
+          <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
+            <colgroup>
+              <col />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 140 }} />
+              <col style={{ width: 120 }} />
+              <col style={{ width: 120 }} />
+            </colgroup>
+            <thead>
+              <tr style={{ background: C.cream200 }}>
+                {["Title", "Category", "Status", "Date", "Actions"].map((col) => (
+                  <th
+                    key={col}
                     style={{
+                      padding: "10px 20px",
                       fontFamily: "var(--font-inter)",
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: C.forest800,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
+                      fontSize: 11,
+                      color: C.slate500,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                      textAlign: "left",
+                      fontWeight: 400,
                     }}
                   >
-                    {blog.title}
-                  </div>
-                </div>
-                {blog.tags.length > 0 && (
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {blog.tags.slice(0, 2).map((tag) => (
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((blog) => {
+                const displayDate = blog.published_at
+                  ? new Date(blog.published_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" })
+                  : new Date(blog.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" })
+
+                const statusStyles =
+                  blog.status === "Published"
+                    ? { background: C.forest100, color: C.forest700, Icon: CheckCircle }
+                    : blog.status === "Draft"
+                    ? { background: C.cream300, color: C.slate600, Icon: Clock }
+                    : { background: C.cream200, color: C.slate400, Icon: Archive }
+
+                const cellStyle: React.CSSProperties = {
+                  verticalAlign: "top",
+                  paddingTop: 14,
+                  paddingBottom: 14,
+                  paddingLeft: 20,
+                  paddingRight: 12,
+                }
+
+                return (
+                  <tr
+                    key={blog.id}
+                    className="blog-row"
+                    style={{ borderTop: `1px solid ${C.slate100}`, background: C.cream100 }}
+                  >
+                    <td style={cellStyle}>
+                      <div style={{ display: "flex", alignItems: "flex-start", flexDirection: "column", gap: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, maxWidth: "100%" }}>
+                          {blog.featured && <Star size={13} color={C.gold500} fill={C.gold500} style={{ flexShrink: 0 }} />}
+                          <div
+                            style={{
+                              fontFamily: "var(--font-inter)",
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: C.forest800,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {blog.title}
+                          </div>
+                        </div>
+                        {blog.tags.length > 0 && (
+                          <div style={{ display: "flex", gap: 6 }}>
+                            {blog.tags.slice(0, 2).map((tag) => (
+                              <span
+                                key={tag}
+                                style={{
+                                  background: C.cream200,
+                                  fontFamily: "var(--font-inter)",
+                                  fontSize: 10,
+                                  color: C.slate500,
+                                  padding: "2px 8px",
+                                  borderRadius: 10,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    <td style={cellStyle}>
                       <span
-                        key={tag}
+                        title={blog.category}
                         style={{
-                          background: C.cream200,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          maxWidth: "100%",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          background: C.forest600,
+                          color: C.cream100,
                           fontFamily: "var(--font-inter)",
                           fontSize: 10,
-                          color: C.slate500,
-                          padding: "2px 8px",
-                          borderRadius: 10,
+                          textTransform: "uppercase",
+                          letterSpacing: 1,
+                          padding: "3px 10px",
+                          borderRadius: 20,
                         }}
                       >
-                        {tag}
+                        {blog.category}
                       </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    </td>
 
-              <div>
-                <span
-                  style={{
-                    background: C.forest600,
-                    color: C.cream100,
-                    fontFamily: "var(--font-inter)",
-                    fontSize: 10,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                    padding: "3px 10px",
-                    borderRadius: 20,
-                  }}
-                >
-                  {blog.category}
-                </span>
-              </div>
+                    <td style={cellStyle}>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          background: statusStyles.background,
+                          color: statusStyles.color,
+                          fontFamily: "var(--font-inter)",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "4px 10px",
+                          borderRadius: 20,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        <statusStyles.Icon size={12} />
+                        {blog.status}
+                      </span>
+                    </td>
 
-              <div>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    background: statusStyles.background,
-                    color: statusStyles.color,
-                    fontFamily: "var(--font-inter)",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "4px 10px",
-                    borderRadius: 20,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  <statusStyles.Icon size={12} />
-                  {blog.status}
-                </span>
-              </div>
+                    <td style={{ ...cellStyle, fontFamily: "var(--font-inter)", fontSize: 13, color: C.slate500 }}>
+                      {displayDate}
+                    </td>
 
-              <div style={{ fontFamily: "var(--font-inter)", fontSize: 13, color: C.slate500 }}>
-                {displayDate}
-              </div>
-
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <Link href={`/blog/${blog.slug}`} target="_blank" title="View on website">
-                  <Eye size={15} color={C.slate500} />
-                </Link>
-                {can("edit_blogs") && (
-                  <Link href={`/admin/blogs/${blog.id}/edit`} title="Edit post">
-                    <Edit2 size={15} color={C.forest600} />
-                  </Link>
-                )}
-                {can("delete_blogs") && (
-                  deletingId === blog.id ? (
-                    <div
-                      style={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: "50%",
-                        border: `2px solid ${C.slate200}`,
-                        borderTop: `2px solid ${C.slate400}`,
-                        animation: "spin 0.8s linear infinite",
-                      }}
-                    />
-                  ) : (
-                    <Trash2
-                      size={15}
-                      color={C.slate400}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleDelete(blog.id, blog.title)}
-                    />
-                  )
-                )}
-              </div>
-            </div>
-          )
-        })}
+                    <td style={{ ...cellStyle, paddingRight: 20 }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <Link href={`/blog/${blog.slug}`} target="_blank" title="View on website">
+                          <Eye size={15} color={C.slate500} />
+                        </Link>
+                        {can("edit_blogs") && (
+                          <Link href={`/admin/blogs/${blog.id}/edit`} title="Edit post">
+                            <Edit2 size={15} color={C.forest600} />
+                          </Link>
+                        )}
+                        {can("delete_blogs") && (
+                          deletingId === blog.id ? (
+                            <div
+                              style={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: "50%",
+                                border: `2px solid ${C.slate200}`,
+                                borderTop: `2px solid ${C.slate400}`,
+                                animation: "spin 0.8s linear infinite",
+                              }}
+                            />
+                          ) : (
+                            <Trash2
+                              size={15}
+                              color={C.slate400}
+                              style={{ cursor: "pointer" }}
+                              onClick={() => handleDelete(blog.id, blog.title)}
+                            />
+                          )
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

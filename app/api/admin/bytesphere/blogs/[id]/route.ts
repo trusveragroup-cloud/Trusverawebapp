@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/supabase/requireAdmin"
 import { BS_CONTENT_STATUSES } from "@/lib/bytesphere/types"
+import { notifySubscribers } from "@/lib/bytesphere/notify"
 
 const RELATION_SELECT = `
   *,
@@ -86,6 +87,8 @@ export async function PUT(
       return NextResponse.json({ error: "Blog post not found." }, { status: 404 })
     }
 
+    const isFirstPublish = current.status !== "Published"
+
     const { data: existing } = await supabase
       .from("bs_blogs")
       .select("id")
@@ -128,6 +131,30 @@ export async function PUT(
     if (updateError) {
       console.error("Blog update error:", updateError)
       return NextResponse.json({ error: "Failed to update blog post." }, { status: 500 })
+    }
+
+    // Only notify on the transition INTO Published, never on a republish/edit.
+    // Fire and forget: never let a notification failure affect this response.
+    if (status === "Published" && isFirstPublish) {
+      ;(async () => {
+        try {
+          const [{ data: authorRow }, { data: categoryRow }] = await Promise.all([
+            supabase.from("bs_authors").select("name").eq("id", authorId).maybeSingle(),
+            supabase.from("bs_categories").select("name").eq("id", categoryId).maybeSingle(),
+          ])
+          await notifySubscribers({
+            type: "blog",
+            title: title.trim(),
+            excerpt: excerpt.trim(),
+            slug: slug.trim(),
+            coverImageUrl: coverImageUrl?.trim() || null,
+            authorName: authorRow?.name ?? null,
+            categoryName: categoryRow?.name ?? null,
+          })
+        } catch (err) {
+          console.error("Notification error (non-blocking):", err)
+        }
+      })()
     }
 
     return NextResponse.json({

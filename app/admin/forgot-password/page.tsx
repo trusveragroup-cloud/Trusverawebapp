@@ -1,6 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { AlertCircle, Mail } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { C } from "@/lib/colors";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function HexagonIcon() {
   return (
@@ -23,15 +28,6 @@ function ArrowLeftIcon() {
   return (
     <svg width={12} height={12} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M15 6L9 12L15 18" stroke={C.textMuted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" stroke={C.gold500} strokeWidth={2} />
-      <path d="M3 7l9 6 9-6" stroke={C.gold500} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -108,7 +104,45 @@ function PanelArtwork() {
   );
 }
 
+type Status = "idle" | "loading" | "success" | "error";
+
 export default function AdminForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    if (!EMAIL_RE.test(email.trim())) {
+      setErrorMsg("Enter a valid email address.");
+      return;
+    }
+
+    setStatus("loading");
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/api/auth/callback?type=recovery`,
+      });
+
+      if (error) {
+        setStatus("error");
+        setErrorMsg(error.message);
+        return;
+      }
+
+      // Always show success, regardless of whether the account exists —
+      // avoids leaking which emails are registered admins.
+      setStatus("success");
+    } catch {
+      setStatus("error");
+      setErrorMsg("Network error. Please check your connection.");
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "row", height: "100vh", width: "100%" }}>
       <div style={{ width: 420, flexShrink: 0, background: C.forest800, position: "relative", overflow: "hidden" }}>
@@ -199,69 +233,127 @@ export default function AdminForgotPasswordPage() {
         </a>
 
         <div style={{ width: "100%", maxWidth: 400, marginLeft: 0, marginRight: 0 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              background: "rgba(200,151,62,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 24,
-            }}
-          >
-            <MailIcon />
-          </div>
+          {status === "success" ? (
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "rgba(13,148,136,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 24px",
+                }}
+              >
+                <Mail size={24} color="#0D9488" />
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 600, color: C.textDark, marginBottom: 12 }}>
+                Check your email
+              </div>
+              <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, marginBottom: 28 }}>
+                If an account exists for <strong style={{ color: C.textDark }}>{email.trim()}</strong>, you will
+                receive a password reset link shortly. Check your spam folder if it does not arrive within a
+                few minutes.
+              </div>
+              <a href="/admin/login" style={{ fontSize: 13, color: C.textMuted, textDecoration: "none" }}>
+                Back to sign in
+              </a>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "rgba(200,151,62,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 24,
+                }}
+              >
+                <Mail size={24} color={C.gold500} />
+              </div>
 
-          <div style={{ fontSize: 28, fontWeight: 600, color: C.textDark, marginBottom: 8 }}>Reset your password</div>
-          <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 36, lineHeight: 1.6 }}>
-            Enter your email address and we will send you a link to reset your password.
-          </div>
+              <div style={{ fontSize: 28, fontWeight: 600, color: C.textDark, marginBottom: 8 }}>
+                Reset your password
+              </div>
+              <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 36, lineHeight: 1.6 }}>
+                Enter your email address and we will send you a link to reset your password.
+              </div>
 
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 500, color: C.textDark, display: "block", marginBottom: 6 }}>
-              Email address
-            </label>
-            <input
-              type="email"
-              placeholder="you@company.com"
-              style={{
-                width: "100%",
-                height: 44,
-                borderRadius: 8,
-                border: `1px solid ${C.borderLight}`,
-                background: C.white,
-                paddingLeft: 14,
-                fontSize: 14,
-                color: C.textDark,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: C.textDark, display: "block", marginBottom: 6 }}>
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{
+                    width: "100%",
+                    height: 44,
+                    borderRadius: 8,
+                    border: `1px solid ${C.borderLight}`,
+                    background: C.white,
+                    paddingLeft: 14,
+                    fontSize: 14,
+                    color: C.textDark,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
 
-          <button
-            type="button"
-            style={{
-              width: "100%",
-              height: 48,
-              background: C.gold500,
-              color: C.forest800,
-              fontSize: 15,
-              fontWeight: 600,
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
-              marginTop: 28,
-            }}
-          >
-            Send reset link
-          </button>
+              {errorMsg && (
+                <div
+                  style={{
+                    background: "rgba(220,38,38,0.08)",
+                    border: "1px solid rgba(220,38,38,0.25)",
+                    borderRadius: 6,
+                    padding: "10px 14px",
+                    marginTop: 16,
+                    color: "#DC2626",
+                    fontFamily: "var(--font-inter)",
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <AlertCircle size={14} color="#DC2626" />
+                  {errorMsg}
+                </div>
+              )}
 
-          <div style={{ textAlign: "center", fontSize: 12, color: C.textMuted, marginTop: 16 }}>
-            Check your spam folder if you do not receive the email.
-          </div>
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                style={{
+                  width: "100%",
+                  height: 48,
+                  background: C.forest800,
+                  color: C.cream50,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  borderRadius: 8,
+                  border: "none",
+                  cursor: status === "loading" ? "default" : "pointer",
+                  marginTop: 28,
+                }}
+              >
+                {status === "loading" ? "Sending..." : "Send reset link"}
+              </button>
+
+              <div style={{ textAlign: "center", fontSize: 12, color: C.textMuted, marginTop: 16 }}>
+                Check your spam folder if you do not receive the email.
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

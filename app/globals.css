@@ -109,11 +109,11 @@ html { scroll-behavior: smooth; }
 .nav-link { color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 8px 12px; transition: color 0.2s; white-space: nowrap; background: none; border: none; font-family: var(--font-inter), sans-serif; }
 .nav-link:hover { color: #fff; }
 
-.dropdown-menu { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border: 1px solid #E5E7EB; min-width: 460px; padding: 20px; padding-top: 32px; z-index: 200; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dropdown-menu { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border: 1px solid #E5E7EB; min-width: 460px; padding: 8px 20px; z-index: 200; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .dropdown-single { grid-template-columns: 1fr; min-width: 220px; }
 .dropdown-group-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0F3D2E; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #E5E7EB; }
-.dropdown-item { display: block; padding: 7px 10px; padding-left: 10px; border-left: 3px solid transparent; font-size: 13px; color: #1A2332; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; text-decoration: none; font-weight: 500; }
-.dropdown-item:hover { background: #EBE5D8; color: #0F3D2E; padding-left: 14px; border-left: 3px solid #C8973E; }
+.dropdown-item { display: block; padding: 10px 14px; border-left: 3px solid transparent; font-size: 13px; color: #1A2332; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; text-decoration: none; font-weight: 500; }
+.dropdown-item:hover { background: #EBE5D8; color: #0F3D2E; padding-left: 18px; border-left: 3px solid #C8973E; }
 
 .dashboard-panel { background: rgba(15,61,46,0.5); border-radius: 10px; padding: 16px; border: 1px solid rgba(255,255,255,0.08); }
 .level-badge { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 4px; letter-spacing: 0.02em; }

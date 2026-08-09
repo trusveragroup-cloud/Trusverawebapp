@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Inbox, FileText, Settings, Users, LogOut, Bell, type LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard, Inbox, FileText, Settings, Users, LogOut, Bell,
+  Newspaper, UserCircle, Tag, Mail, type LucideIcon,
+} from "lucide-react";
 import { C } from "@/lib/colors";
+import { AdminProvider } from "@/lib/admin-context";
 
-const BARE_ROUTES = ["/admin/login", "/admin/forgot-password"];
+const BARE_ROUTES = ["/admin/login", "/admin/forgot-password", "/admin/set-password", "/admin/auth-handler"];
 
 function HexagonIcon() {
   return (
@@ -15,16 +19,63 @@ function HexagonIcon() {
   );
 }
 
-const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
-  { label: "Contacts", icon: Inbox, href: "/admin/contacts" },
-  { label: "Blogs", icon: FileText, href: "/admin/blogs" },
-  { label: "Settings", icon: Settings, href: "/admin/settings" },
-  { label: "Users", icon: Users, href: "/admin/users" },
+type NavItem = { label: string; icon: LucideIcon; href: string };
+type NavGroup = { label: string | null; items: NavItem[] };
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: null,
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
+      { label: "Contacts", icon: Inbox, href: "/admin/contacts" },
+      { label: "Blogs", icon: FileText, href: "/admin/blogs" },
+    ],
+  },
+  {
+    label: "BYTESPHERE",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/admin/bytesphere/dashboard" },
+      { label: "Articles", icon: Newspaper, href: "/admin/bytesphere/articles" },
+      { label: "Blogs", icon: FileText, href: "/admin/bytesphere/blogs" },
+      { label: "Authors", icon: UserCircle, href: "/admin/bytesphere/authors" },
+      { label: "Taxonomy", icon: Tag, href: "/admin/bytesphere/taxonomy" },
+      { label: "Subscribers", icon: Mail, href: "/admin/bytesphere/subscribers" },
+      { label: "Contacts", icon: Inbox, href: "/admin/bytesphere/contacts" },
+    ],
+  },
+  {
+    label: "SHARED",
+    items: [
+      { label: "Settings", icon: Settings, href: "/admin/settings" },
+      { label: "Users", icon: Users, href: "/admin/users" },
+    ],
+  },
 ];
 
+function activeHrefFor(pathname: string): string | null {
+  let best: string | null = null;
+  for (const group of NAV_GROUPS) {
+    for (const item of group.items) {
+      const matches = pathname === item.href || pathname.startsWith(item.href + "/");
+      if (matches && (best === null || item.href.length > best.length)) {
+        best = item.href;
+      }
+    }
+  }
+  return best;
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminProvider>
+      <AdminLayoutInner>{children}</AdminLayoutInner>
+    </AdminProvider>
+  );
+}
+
+function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const activeHref = activeHrefFor(pathname);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -43,14 +94,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           height: "100vh",
           display: "flex",
           flexDirection: "column",
-          background: C.forest600,
+          overflow: "hidden",
+          background: "#132A13",
           position: "fixed",
           left: 0,
           top: 0,
           zIndex: 100,
         }}
       >
-        <div style={{ padding: "24px 16px 16px" }}>
+        <style>{`
+          .sidebar-nav-scroll::-webkit-scrollbar { width: 0; }
+        `}</style>
+        <div style={{ padding: "24px 16px 16px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
@@ -72,49 +127,77 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div style={{ marginTop: 20, borderTop: "1px solid rgba(255,255,255,0.08)" }} />
         </div>
 
-        <div style={{ marginTop: 8, padding: "0 8px", flex: 1 }}>
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <Link key={item.label} href={item.href} style={{ textDecoration: "none", display: "block" }}>
+        <div
+          className="sidebar-nav-scroll"
+          style={{
+            marginTop: 8,
+            padding: "0 8px",
+            flex: 1,
+            overflowY: "auto",
+            minHeight: 0,
+            scrollbarWidth: "none",
+          }}
+        >
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label ?? "root"}>
+              {group.label && (
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: isActive ? "10px 12px 10px 9px" : "10px 12px",
-                    borderRadius: 8,
-                    fontSize: 13,
+                    fontSize: 10,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    color: "rgba(254,253,251,0.35)",
+                    padding: "16px 12px 6px",
                     fontFamily: "var(--font-inter)",
-                    marginBottom: 2,
-                    background: isActive ? "rgba(200,151,62,0.10)" : "transparent",
-                    borderLeft: isActive ? `3px solid ${C.gold500}` : "none",
-                    color: isActive ? C.gold400 : "rgba(254,253,251,0.55)",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                      e.currentTarget.style.color = "rgba(254,253,251,0.80)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "rgba(254,253,251,0.55)";
-                    }
                   }}
                 >
-                  <Icon size={18} strokeWidth={1.75} color={isActive ? C.gold400 : "rgba(254,253,251,0.55)"} />
-                  <span>{item.label}</span>
+                  {group.label}
                 </div>
-              </Link>
-            );
-          })}
+              )}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeHref === item.href;
+                return (
+                  <Link key={item.href} href={item.href} style={{ textDecoration: "none", display: "block" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: isActive ? "10px 12px 10px 9px" : "10px 12px",
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontFamily: "var(--font-inter)",
+                        marginBottom: 2,
+                        background: isActive ? "rgba(200,151,62,0.10)" : "transparent",
+                        borderLeft: isActive ? `3px solid ${C.gold500}` : "none",
+                        color: isActive ? C.gold400 : "rgba(254,253,251,0.55)",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                          e.currentTarget.style.color = "rgba(254,253,251,0.80)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = "rgba(254,253,251,0.55)";
+                        }
+                      }}
+                    >
+                      <Icon size={18} strokeWidth={1.75} color={isActive ? C.gold400 : "rgba(254,253,251,0.55)"} />
+                      <span>{item.label}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </div>
 
-        <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, marginTop: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
