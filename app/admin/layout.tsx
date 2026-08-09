@@ -7,7 +7,7 @@ import {
   Newspaper, UserCircle, Tag, Mail, type LucideIcon,
 } from "lucide-react";
 import { C } from "@/lib/colors";
-import { AdminProvider } from "@/lib/admin-context";
+import { AdminProvider, useAdmin } from "@/lib/admin-context";
 
 const BARE_ROUTES = ["/admin/login", "/admin/forgot-password", "/admin/set-password", "/admin/auth-handler"];
 
@@ -52,6 +52,16 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+const BS_NAV_PERMISSIONS: Record<string, string> = {
+  "/admin/bytesphere/dashboard": "view_bs_dashboard",
+  "/admin/bytesphere/articles": "view_bs_articles",
+  "/admin/bytesphere/blogs": "view_bs_blogs",
+  "/admin/bytesphere/authors": "view_bs_authors",
+  "/admin/bytesphere/taxonomy": "view_bs_taxonomy",
+  "/admin/bytesphere/subscribers": "view_bs_subscribers",
+  "/admin/bytesphere/contacts": "view_bs_contacts",
+};
+
 function activeHrefFor(pathname: string): string | null {
   let best: string | null = null;
   for (const group of NAV_GROUPS) {
@@ -76,6 +86,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const activeHref = activeHrefFor(pathname);
+  const { can, loading } = useAdmin();
+
+  const hasBsAccess =
+    loading || Object.values(BS_NAV_PERMISSIONS).some((p) => can(p));
+
+  const visibleGroups = NAV_GROUPS.filter((group) => group.label !== "BYTESPHERE" || hasBsAccess).map(
+    (group) => {
+      if (group.label !== "BYTESPHERE") return group;
+      return {
+        ...group,
+        items: group.items.filter(
+          (item) => loading || can(BS_NAV_PERMISSIONS[item.href])
+        ),
+      };
+    }
+  );
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -138,7 +164,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
             scrollbarWidth: "none",
           }}
         >
-          {NAV_GROUPS.map((group) => (
+          {visibleGroups.map((group) => (
             <div key={group.label ?? "root"}>
               {group.label && (
                 <div
