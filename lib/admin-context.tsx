@@ -37,7 +37,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           loading: false,
         })
       })
-      .catch(() => setState((s) => ({ ...s, loading: false })))
+      .catch(() =>
+        setState({
+          role: "",
+          permissions: [],
+          can: () => false,
+          loading: false,
+        })
+      )
   }, [])
 
   return <AdminCtx.Provider value={state}>{children}</AdminCtx.Provider>

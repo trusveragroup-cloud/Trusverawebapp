@@ -166,8 +166,8 @@ function AdminLoginForm() {
       }
 
       const redirectTo = searchParams.get("redirectTo") || "/admin/dashboard";
-      router.push(redirectTo);
       router.refresh();
+      router.push(redirectTo);
     } catch {
       setAuthError("Network error. Please check your connection.");
     } finally {

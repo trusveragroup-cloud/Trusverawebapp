@@ -76,6 +76,12 @@ function activeHrefFor(pathname: string): string | null {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  if (BARE_ROUTES.includes(pathname)) {
+    return <>{children}</>;
+  }
+
   return (
     <AdminProvider>
       <AdminLayoutInner>{children}</AdminLayoutInner>
@@ -107,10 +113,6 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/admin/login";
   };
-
-  if (BARE_ROUTES.includes(pathname)) {
-    return <>{children}</>;
-  }
 
   return (
     <div style={{ display: "flex", flexDirection: "row", height: "100vh", overflow: "hidden" }}>
