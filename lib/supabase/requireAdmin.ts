@@ -8,6 +8,7 @@ export type AdminUser = {
   email: string
   fullName: string
   role: AdminRole
+  permissions: string[]
 }
 
 export async function requireAdmin(): Promise<
@@ -40,12 +41,30 @@ export async function requireAdmin(): Promise<
     }
   }
 
+  const { data: perms } = await adminSupabase
+    .from("role_permissions")
+    .select("permission, granted")
+    .eq("role", adminUser.role)
+
+  let permissions: string[] = (perms || [])
+    .filter((p) => p.granted)
+    .map((p) => p.permission)
+
+  // Super Admin always gets everything regardless of DB rows
+  if (adminUser.role === "Super Admin") {
+    const { data: allPerms } = await adminSupabase
+      .from("role_permissions")
+      .select("permission")
+    permissions = [...new Set((allPerms || []).map((p) => p.permission))]
+  }
+
   return {
     user: {
       id: adminUser.id,
       email: adminUser.email,
       fullName: adminUser.full_name,
       role: adminUser.role,
+      permissions,
     },
   }
 }
