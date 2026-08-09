@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/supabase/requireAdmin"
+import { requirePermission } from "@/lib/supabase/permissions"
 import { BS_CONTENT_STATUSES } from "@/lib/bytesphere/types"
 import { notifySubscribers } from "@/lib/bytesphere/notify"
 
@@ -17,6 +18,8 @@ export async function GET(
 ) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "view_bs_articles")
+  if (denied) return denied
 
   try {
     const { id } = await params
@@ -45,6 +48,8 @@ export async function PUT(
 ) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "edit_bs_articles")
+  if (denied) return denied
 
   try {
     const { id } = await params
@@ -182,6 +187,8 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "delete_bs_articles")
+  if (denied) return denied
 
   try {
     const { id } = await params

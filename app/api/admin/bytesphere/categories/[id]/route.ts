@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/supabase/requireAdmin"
+import { requirePermission } from "@/lib/supabase/permissions"
 
 export async function PUT(
   req: NextRequest,
@@ -8,6 +9,8 @@ export async function PUT(
 ) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "manage_bs_taxonomy")
+  if (denied) return denied
 
   try {
     const { id } = await params
@@ -64,6 +67,8 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "manage_bs_taxonomy")
+  if (denied) return denied
 
   try {
     const { id } = await params

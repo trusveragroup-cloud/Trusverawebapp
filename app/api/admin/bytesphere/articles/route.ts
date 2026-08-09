@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/supabase/requireAdmin"
+import { requirePermission } from "@/lib/supabase/permissions"
 import { BS_CONTENT_STATUSES, type BsContentStatus } from "@/lib/bytesphere/types"
 import { notifySubscribers } from "@/lib/bytesphere/notify"
 
@@ -14,6 +15,8 @@ const RELATION_SELECT = `
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "view_bs_articles")
+  if (denied) return denied
 
   try {
     const { searchParams } = new URL(req.url)
@@ -55,6 +58,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "create_bs_articles")
+  if (denied) return denied
 
   try {
     const body = await req.json()

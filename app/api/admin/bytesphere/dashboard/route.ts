@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/supabase/requireAdmin"
+import { requirePermission } from "@/lib/supabase/permissions"
 
 type ContentType = "article" | "blog"
 
@@ -22,6 +23,8 @@ function relationName(rel: RawContentRow["author"]): string | null {
 export async function GET() {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "view_bs_dashboard")
+  if (denied) return denied
 
   try {
     const supabase = createAdminClient()

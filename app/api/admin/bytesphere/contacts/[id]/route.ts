@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/supabase/requireAdmin"
+import { requirePermission } from "@/lib/supabase/permissions"
 
 const VALID_STATUSES = ["new", "read", "replied", "closed"]
 
@@ -10,6 +11,8 @@ export async function PATCH(
 ) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "edit_bs_contacts")
+  if (denied) return denied
 
   try {
     const { id } = await params
@@ -50,6 +53,8 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if ("error" in auth) return auth.error
+  const denied = requirePermission(auth.user, "edit_bs_contacts")
+  if (denied) return denied
 
   try {
     const { id } = await params
