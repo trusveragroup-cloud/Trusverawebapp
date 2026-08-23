@@ -137,8 +137,10 @@ export default function SettingsPage() {
     setTimeout(() => setNotifySaved(false), 3000)
   }
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
     setPasswordError("")
+    setPasswordSaved(false)
+
     if (!currentPassword) {
       setPasswordError("Current password is required.")
       return
@@ -151,11 +153,27 @@ export default function SettingsPage() {
       setPasswordError("Passwords do not match.")
       return
     }
-    setPasswordSaved(true)
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    setTimeout(() => setPasswordSaved(false), 3000)
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setPasswordError(data.error || "Failed to update password.")
+        return
+      }
+      setPasswordSaved(true)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      setTimeout(() => setPasswordSaved(false), 3000)
+    } catch {
+      setPasswordError("Something went wrong. Please try again.")
+    }
   }
 
   const handleSendInvite = () => {

@@ -740,17 +740,17 @@ const FOUNDERS = [
   },
   {
     name: "Dinesh Lilani",
-    role: "Co-Founder & Director",
+    role: "Co-Founder",
     bio: "Co-founder of TrusVera Group, bringing deep expertise in B2B sales strategy and enterprise account development to revenue teams worldwide.",
-    image: "/Founder Image/Dinesh_L.png",
-    alt: "Dinesh Lilani - Co-Founder & Director",
+    image: "/Founder Image/Dinesh Lilani.jpg",
+    alt: "Dinesh Lilani - Co-Founder",
   },
   {
     name: "Arbaz Thange",
-    role: "Co-Founder & Director",
+    role: "Co-Founder",
     bio: "Co-founder of TrusVera Group, driving the vision for precision B2B intelligence and demand generation across global enterprise markets.",
     image: "/Founder Image/Arbaz Thange_photo.png",
-    alt: "Arbaz Thange - Co-Founder & Director",
+    alt: "Arbaz Thange - Co-Founder",
   },
 ];
 
